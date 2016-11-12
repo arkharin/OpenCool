@@ -90,4 +90,3 @@ ENV/
 
 # Pycharm project setting
 .idea/
-*__init__*
