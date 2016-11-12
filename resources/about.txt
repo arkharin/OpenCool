@@ -1,0 +1,1 @@
+This module contains UI elements, like an image.
