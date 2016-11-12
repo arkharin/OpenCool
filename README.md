@@ -1,0 +1,2 @@
+# OpenCool
+Refrigeration system simulation
