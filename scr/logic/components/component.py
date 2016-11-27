@@ -180,7 +180,7 @@ class Component(ABC, GeneralData):
         # Return all nodes connected with the component. First inlet nodes.
         return {**self.get_inlet_nodes(), **self.get_outlet_nodes()}
 
-    def get__node(self, id_node):
+    def get_node(self, id_node):
             return self.get_nodes()[id_node]
 
     def get_outlet_nodes(self):
