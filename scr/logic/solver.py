@@ -6,14 +6,14 @@
 Solver
 """
 
-from scipy.optimize import fsolve
-import scr.logic.node as nd
 import numpy as np
-from scr.logic.component import Component
-from scr.logic.errors import TypeComponentError
-from scr.logic.components.evaporator import Evaporator
-from scr.logic.components.condenser import Condenser
+from scipy.optimize import fsolve
 
+import scr.logic.nodes.node as nd
+from scr.logic.components.component import Component
+import scr.logic.components.condenser.theoretical as Condenser
+import scr.logic.components.evaporator.theoretical as Evaporator
+from scr.logic.errors import TypeComponentError
 
 COMPRESSOR = Component.COMPRESSOR
 CONDENSER = Component.CONDENSER
@@ -32,10 +32,13 @@ def solve_circuit(circuit):
 
 
 def _get_initial_conditions(circuit):
-    condensers = circuit.search_components(CONDENSER)
-    evaporators = circuit.search_components(EVAPORATOR)
-    expansion_valves = circuit.search_components(EXPANSION_VALVE)
-    from_components = condensers + expansion_valves + evaporators
+    condensers = circuit.search_components_by_type(CONDENSER)
+    evaporators = circuit.search_components_by_type(EVAPORATOR)
+    expansion_valves = circuit.search_components_by_type(EXPANSION_VALVE)
+    # TODO ahora es un dict. revisar q varia.
+    from_components = condensers.copy()
+    from_components.update(expansion_valves)
+    from_components.update(evaporators)
     stop_components = [COMPRESSOR, CONDENSER, EVAPORATOR, EXPANSION_VALVE]
     mass_flow, pc, pe, tc, te, tsc, tsh = _initial_values(circuit, condensers, evaporators)
     _fill_nodes(from_components, pc, pe, stop_components, tc, te, tsc, tsh)
@@ -64,22 +67,23 @@ def fill_mass_flows(circuit, mass_flow):
 
 
 def _fill_nodes(from_components, pc, pe, stop_components, tc, te, tsc, tsh):
-    for component in from_components:
-        if component.get_component_type() is CONDENSER:
+    for i in from_components:
+        component = from_components[i]
+        if component.get_type() == CONDENSER:
             node_property_type_1 = nd.Node.PRESSURE
             property_1 = pc
             # TODO Values are hardcoded
             node_property_type_2 = nd.Node.TEMPERATURE
             property_2 = tc + 30
             nodes = component.get_inlet_nodes()
-        elif component.get_component_type() is EVAPORATOR:
+        elif component.get_type() == EVAPORATOR:
             node_property_type_1 = nd.Node.PRESSURE
             property_1 = pe
             node_property_type_2 = nd.Node.TEMPERATURE
             property_2 = te + tsh
             nodes = component.get_outlet_nodes()
 
-        elif component.get_component_type() is EXPANSION_VALVE:
+        elif component.get_type() == EXPANSION_VALVE:
             node_property_type_1 = nd.Node.PRESSURE
             property_1 = pc
             node_property_type_2 = nd.Node.TEMPERATURE
@@ -100,10 +104,12 @@ def _fill_nodes(from_components, pc, pe, stop_components, tc, te, tsc, tsh):
 def _initial_values(circuit, condensers, evaporators):
     # TODO Values are hardcoded
     refrigerant = circuit.get_refrigerant()
-    te = evaporators[0].get_basic_property(Evaporator.SATURATION_TEMPERATURE)
+    for evaporator in evaporators:
+        te = evaporators[evaporator].get_basic_property(Evaporator.Theoretical.SATURATION_TEMPERATURE)
     pe = refrigerant.p(refrigerant.TEMPERATURE, te, refrigerant.QUALITY, 1.0)
     tsh = 5.0
-    tc = condensers[0].get_basic_property(Condenser.SATURATION_TEMPERATURE)
+    for condenser in condensers:
+        tc = condensers[condenser].get_basic_property(Condenser.Theoretical.SATURATION_TEMPERATURE)
     pc = refrigerant.p(refrigerant.TEMPERATURE, tc, refrigerant.QUALITY, 1.0)
     tsc = 2.0
     mass_flow = 0.10
@@ -112,12 +118,13 @@ def _initial_values(circuit, condensers, evaporators):
 
 def _fill_nodes_from_component_to_component(nodes, stop_components, property_node_type_1, property_1,
                                             property_node_type_2, property_2):
-    for node in nodes:
+    for i in nodes:
+        node = nodes[i]
         if not node.is_init():
             node.update_node_values(property_node_type_1, property_1, property_node_type_2, property_2)
             next_components = node.get_components_attached()
             for next_component in next_components:
-                if next_component.get_component_type() not in stop_components:
+                if next_component.get_type() not in stop_components:
                     _fill_nodes_from_component_to_component(next_component, stop_components, property_node_type_1,
                                                             property_1, property_node_type_2, property_2)
 

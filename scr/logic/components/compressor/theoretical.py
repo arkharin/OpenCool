@@ -6,13 +6,13 @@
 Define the Compressor component.
 """
 
-from scr.logic.component import Component
 from scr.logic.common import MAX_FLOAT_VALUE
-from scr.logic.refrigerant import Refrigerant
+from scr.logic.components.component import Component
 from scr.logic.errors import PropertyNameError
+from scr.logic.refrigerant import Refrigerant
 
 
-class Compressor(Component):
+class Theoretical(Component):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'
     POWER_CONSUMPTION = 'power_consumption'
@@ -24,16 +24,18 @@ class Compressor(Component):
     optional_properties_allowed = {DISPLACEMENT_VOLUME: {'lower_limit': 0.0, 'upper_limit': MAX_FLOAT_VALUE},
                                    VOLUMETRIC_EFFICIENCY: {'lower_limit': 0.0, 'upper_limit': 1.0}}
 
-    def __init__(self, name, identifier, inlet_nodes, outlet_nodes, basic_properties, optional_properties):
-        super().__init__(name, identifier, self.COMPRESSOR, inlet_nodes, 1, outlet_nodes, 1, basic_properties,
-                         self.basic_properties_allowed, optional_properties, self.optional_properties_allowed)
+    def __init__(self, data, circuit_nodes):
+        super().__init__(data, circuit_nodes, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
     def _calculated_result(self, key):
+        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+        inlet_node = self.get_inlet_node(id_inlet_node)
+        id_outlet_node = list(self.get_id_outlet_nodes())[0]
+        outlet_node = self.get_outlet_node(id_outlet_node)
+
         if key is self.ISENTROPIC_EFFICIENCY:
-            inlet_node = self.get_inlet_nodes()[0]
             h_in = inlet_node.enthalpy()
             s_in = inlet_node.entropy()
-            outlet_node = self.get_outlet_nodes()[0]
             h_out = outlet_node.enthalpy()
             p_out = outlet_node.pressure()
             ref = outlet_node.get_refrigerant()
@@ -41,22 +43,18 @@ class Compressor(Component):
             return (h_is-h_in)/(h_out-h_in)
 
         elif key is self.POWER_CONSUMPTION:
-            inlet_node = self.get_inlet_nodes()[0]
             h_in = inlet_node.enthalpy()
-            outlet_node = self.get_outlet_nodes()[0]
             h_out = outlet_node.enthalpy()
             mass_flow = h_out.mass_flow()
             return mass_flow * (h_out - h_in) / 1000.0
 
         elif key is self.VOLUMETRIC_EFFICIENCY:
-            inlet_node = self.get_inlet_nodes()[0]
             mass_flow = inlet_node.mass_flow()
             density = inlet_node.density()
             volumetric_efficiency = self.get_optional_property(key)
             return mass_flow * density / volumetric_efficiency
 
         elif key is self.DISPLACEMENT_VOLUME:
-            inlet_node = self.get_inlet_nodes()[0]
             mass_flow = inlet_node.mass_flow()
             density = inlet_node.density()
             displacement_volume = self.get_optional_property(key)
