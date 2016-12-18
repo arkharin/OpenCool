@@ -133,6 +133,7 @@ class Component(ABC, GeneralData):
         pass
 
     def eval_error(self, error):
+        # TODO component will return h_calc and h_circuit
         # Input a list of float and return a list with floats append of equations error.
         properties = self.get_basic_properties()
         if len(properties) == 0:

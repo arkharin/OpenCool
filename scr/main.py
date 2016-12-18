@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import scr.logic.circuit as circ
-from scr.logic.solver import solve_circuit
+from scr.logic.solvers.solver import Solver
 
 input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refrigerant_library': 'CoolPropHeos',
                  'nodes': [{'name': 'n1', 'id': 1}, {'name': 'n2', 'id': 2}, {'name': 'n3', 'id': 3},{'name': 'n4', 'id': 4}],
@@ -24,7 +24,18 @@ input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refriger
                                 ]}
 
 circuit = circ.Circuit(input_circuit)
-error = solve_circuit(circuit)
+
+presolver = 'presolver_v01'
+solver = 'simple_circuit_solver'
+postsolver = 'postsolver_v01'
+solver = Solver(circuit, presolver, solver, postsolver)
+solver.solve()
+circuit_solved = solver.get_circuit_solved()
+error = solver.get_solution_error()
+
 print('The error is:\n')
 print(error)
+print()
+print('The circuit solve is:\n')
+print(circuit_solved)
 print('end')
