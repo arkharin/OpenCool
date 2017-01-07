@@ -31,8 +31,11 @@ postsolver = 'postsolver_v01'
 solver = Solver(circuit, presolver, solver, postsolver)
 solver.solve()
 circuit_solved = solver.get_circuit_solved()
+is_solved = solver.is_circuit_solved()
 error = solver.get_solution_error()
-
+exit_message = solver._exit_message_solver_algorithm
+print('Is circuit solved? %s' %is_solved)
+print(exit_message)
 print('The error is:\n')
 print(error)
 print()

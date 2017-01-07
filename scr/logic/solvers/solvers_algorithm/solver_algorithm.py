@@ -34,3 +34,11 @@ class Solver_algorithm (ABC):
     @abstractmethod
     def get_solution_error(self):
         pass
+
+    @abstractmethod
+    def is_solution_converged(self):
+        pass
+
+    @abstractmethod
+    def exit_message(self):
+        pass

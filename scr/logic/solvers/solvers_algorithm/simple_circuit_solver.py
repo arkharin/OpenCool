@@ -7,7 +7,7 @@ Solver for simple circuit
 """
 
 import numpy as np
-from scipy.optimize import fsolve
+from scipy.optimize import root
 
 from scr.logic.components.component import Component
 from scr.logic.solvers.solvers_algorithm.solver_algorithm import Solver_algorithm
@@ -17,21 +17,17 @@ CONDENSER = Component.CONDENSER
 EVAPORATOR = Component.EVAPORATOR
 EXPANSION_VALVE = Component.EXPANSION_VALVE
 
-# TODO implementar clase solve? De esta manera pasaría todo junto el error, la solucion, y lo que sea.
-
 
 class Simple_circuit_solver(Solver_algorithm):
 
     def __init__(self):
         super().__init__()
-        self._error = None
+        self._solution = None
 
-    #TODO comprobar si llama al init de Solver o no.
     def solve(self, circuit, initial_conditions, **kwargs):
         ndarray_initial_conditions = np.array(initial_conditions)
-        solution = fsolve(self._get_equations_error, ndarray_initial_conditions, factor=1.0,  args=circuit)
+        self._solution = root(self._get_equations_error, ndarray_initial_conditions, args=circuit)
         self._calculate_nodes_solved(circuit)
-        self._error = self._get_equations_error(solution, circuit)
         return circuit
 
     def _get_equations_error(self, x, circuit):
@@ -48,13 +44,9 @@ class Simple_circuit_solver(Solver_algorithm):
             equations_results = components[component].eval_equations()
             for equation_result in equations_results:
                 error.append(equation_result[0] - equation_result[1])
-            #error = components[component].eval_error(error)
         return error
 
-
     def _calculate_nodes_solved(self, circuit):
-        # TODO input a circuit with their solution and return a dictionary with keys = identifier nodes and as value a
-        # dictionary thermodynamic properties
         nodes = circuit.get_nodes()
         for node in nodes:
             node = nodes[node]
@@ -63,4 +55,10 @@ class Simple_circuit_solver(Solver_algorithm):
             node.calculate_node()
 
     def get_solution_error(self):
-        return self._error
+        return self._solution['fun']
+
+    def is_solution_converged(self):
+            return self._solution['success']
+
+    def exit_message(self):
+        return self._solution['message']
