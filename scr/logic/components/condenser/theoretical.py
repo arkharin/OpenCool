@@ -57,5 +57,8 @@ class Theoretical(Component):
         else:
             raise PropertyNameError("Invalid property. %s  is not in %s]" % key)
 
-    def _eval_equation_error(self, basic_property):
-        return self._calculated_result(basic_property) - self.get_basic_property(basic_property)
+    def _eval_basic_equation(self, basic_property):
+        return [self.get_basic_property(basic_property), self._calculated_result(basic_property)]
+
+    def _eval_intrinsic_equations(self):
+        return None

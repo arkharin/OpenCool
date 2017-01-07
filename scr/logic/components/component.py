@@ -127,21 +127,24 @@ class Component(ABC, GeneralData):
             results[key] = self._calculated_result(key)
         return results
 
+    def eval_equations(self):
+        # Return a matrix of two columns with the calculation result of each side of the equation.
+        results = []
+        int_eq = self._eval_intrinsic_equations()
+        if int_eq is not None:
+            results.append(int_eq)
+        properties = self.get_basic_properties()
+        for key in properties:
+            results.append(self._eval_basic_equation(key))
+        return results
+
     @abstractmethod
-    def _eval_equation_error(self, basic_property):
-        # Return floats with equation error.
+    def _eval_intrinsic_equations(self):
         pass
 
-    def eval_error(self, error):
-        # TODO component will return h_calc and h_circuit
-        # Input a list of float and return a list with floats append of equations error.
-        properties = self.get_basic_properties()
-        if len(properties) == 0:
-            error.append(self._eval_equation_error(properties))
-        else:
-            for key in properties:
-                error.append(self._eval_equation_error(key))
-        return error
+    @abstractmethod
+    def _eval_basic_equation(self, basic_property):
+        pass
 
     def get_id_input_properties(self):
         # Return a dictview with the names of inputs of properties

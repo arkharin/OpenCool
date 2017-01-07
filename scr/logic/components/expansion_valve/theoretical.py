@@ -21,7 +21,10 @@ class Theoretical(Component):
     def _calculated_result(self, key):
             return None
 
-    def _eval_equation_error(self, basic_property):
+    def _eval_basic_equation(self, basic_property):
+        return None
+
+    def _eval_intrinsic_equations(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
         id_outlet_node = list(self.get_id_outlet_nodes())[0]
@@ -30,4 +33,4 @@ class Theoretical(Component):
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
 
-        return (h_in - h_out) / 1000.0
+        return [h_in / 1000.0, h_out / 1000.0]

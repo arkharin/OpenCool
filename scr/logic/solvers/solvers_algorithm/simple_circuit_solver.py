@@ -45,7 +45,10 @@ class Simple_circuit_solver(Solver_algorithm):
         error = []
         components = circuit.get_components()
         for component in components:
-            error = components[component].eval_error(error)
+            equations_results = components[component].eval_equations()
+            for equation_result in equations_results:
+                error.append(equation_result[0] - equation_result[1])
+            #error = components[component].eval_error(error)
         return error
 
 
