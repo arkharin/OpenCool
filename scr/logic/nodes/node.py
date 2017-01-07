@@ -10,9 +10,13 @@ from abc import ABC, abstractmethod
 from scr.logic.errors import PropertyNameError
 from scr.logic.common import GeneralData
 from scr.logic.refrigerant import Refrigerant
+from importlib import import_module
 
 
 class Node(ABC, GeneralData):
+    NAME = 'name'
+    IDENTIFIER = 'id'
+    # Thermodynamic properties
     DENSITY = Refrigerant.DENSITY
     ENTROPY = Refrigerant.ENTROPY
     ENTHALPY = Refrigerant.ENTHALPY
@@ -21,8 +25,8 @@ class Node(ABC, GeneralData):
     TEMPERATURE = Refrigerant.TEMPERATURE
     NO_INIT = None
 
-    def __init__(self, name, identifier, refrigerant):
-        super().__init__(name, identifier)
+    def __init__(self, data, refrigerant):
+        super().__init__(data[self.NAME], data[self.IDENTIFIER])
         self._attach_components = []
         self._refrigerant = refrigerant
         self._id_mass_flow = self.NO_INIT
@@ -34,6 +38,21 @@ class Node(ABC, GeneralData):
         self._quality = self.NO_INIT
         self._pressure = self.NO_INIT
         self._temperature = self.NO_INIT
+
+    @staticmethod
+    def build(data, refrigerant, ref_lib):
+        # Dynamic importing modules
+        try:
+            nd = import_module('scr.logic.nodes.' + ref_lib)
+        except ImportError:
+            print('Error loading node library. Type: %s is not found', ref_lib)
+            exit(1)
+        aux = ref_lib.rsplit('.')
+        class_name = aux.pop()
+        # Only capitalize the first letter
+        class_name = class_name.replace(class_name[0], class_name[0].upper(), 1)
+        class_ = getattr(nd, class_name)
+        return class_(data, refrigerant)
 
     def _init_essential_properties(self, property_type_1, property_1, property_type_2, property_2):
         type_property_base_1 = self.get_type_property_base_1()

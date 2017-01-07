@@ -6,13 +6,13 @@
 Define the HEOS CoolProp backend for node.
 """
 
-from scr.logic.node import Node
+from scr.logic.nodes.node import Node
 
 
-class CoolPropHEOSNode(Node):
+class CoolPropHeos(Node):
 
-    def __init__(self, name, identifier, refrigerant):
-        super().__init__(name, identifier, refrigerant)
+    def __init__(self, data, refrigerant):
+        super().__init__(data, refrigerant)
 
     def get_type_property_base_1(self):
         return self.TEMPERATURE

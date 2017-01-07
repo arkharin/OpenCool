@@ -9,6 +9,7 @@ Define the abstract class component.
 from abc import ABC, abstractmethod
 from scr.logic.common import GeneralData, check_input_str, check_type, check_input_float
 from scr.logic.errors import TypeValueError, PropertyNameError
+from importlib import import_module
 
 
 class Component(ABC, GeneralData):
@@ -22,38 +23,67 @@ class Component(ABC, GeneralData):
     SEPARATOR_FLOW = 'separator_flow'  # Only 1 outlet and N inlets
     TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
     OTHER = 'other'
+    # Parameters
+    BASIC_PROPERTIES = 'basic properties'
+    COMPONENTS = 'components'
+    COMPONENT_TYPE = 'type'
+    IDENTIFIER = 'id'
+    INLET_NODES = 'inlet nodes'
+    NAME = 'name'
+    NODES = 'nodes'
+    OPTIONAL_PROPERTIES = 'optional properties'
+    OUTLET_NODES = 'outlet nodes'
+    REFRIGERANT = 'refrigerant'
 
-    def __init__(self, name, identifier, component_type, inlet_nodes, n_inlet_nodes, outlet_nodes, n_outlet_nodes,
-                 basic_properties, basic_properties_allowed, optional_properties, optional_properties_allowed):
+    def __init__(self, data, circuit_nodes, n_inlet_nodes, n_outlet_nodes, basic_properties_allowed,
+                 optional_properties_allowed):
 
-        super().__init__(name, identifier)
+        super().__init__(data[self.NAME], data[self.IDENTIFIER])
 
-        check_input_str(component_type)
-        self._component_type = component_type
-        self._check_input_nodes(inlet_nodes, n_inlet_nodes)
-        self._inlet_nodes = inlet_nodes
+        check_input_str(data[self.COMPONENT_TYPE])
+        self._component_type = data[self.COMPONENT_TYPE].rsplit('.')[0]
 
-        self._check_input_nodes(outlet_nodes, n_outlet_nodes)
-        self._outlet_nodes = outlet_nodes
+        id_inlet_nodes = data[self.INLET_NODES]
+        self._check_input_nodes(id_inlet_nodes, n_inlet_nodes)
+        self._inlet_nodes = {x: circuit_nodes[x] for x in id_inlet_nodes}
 
-        self._check_input_properties(basic_properties, basic_properties_allowed)
-        self._basic_properties = basic_properties
+        id_outlet_nodes = data[self.OUTLET_NODES]
+        self._check_input_nodes(id_outlet_nodes, n_outlet_nodes)
+        self._outlet_nodes = {x: circuit_nodes[x] for x in id_outlet_nodes}
 
-        self._check_input_properties(optional_properties, optional_properties_allowed)
-        self._optional_properties = optional_properties
+        self._check_input_properties(data[self.BASIC_PROPERTIES], basic_properties_allowed)
+        self._basic_properties = data[self.BASIC_PROPERTIES]
+
+        self._check_input_properties(data[self.OPTIONAL_PROPERTIES], optional_properties_allowed)
+        self._optional_properties = data[self.OPTIONAL_PROPERTIES]
 
         self._attach_to_nodes()
 
         self._basic_properties_results = self.NO_INIT
         self._optional_properties_results = self.NO_INIT
 
+    @staticmethod
+    def build(component, circuit_nodes):
+        # Dynamic importing modules
+        component_type = component[Component.COMPONENT_TYPE]
+        try:
+            cmp = import_module('scr.logic.components.' + component_type)
+        except ImportError:
+            print('Error loading component. Type: %s is not found', component_type)
+            exit(1)
+        aux = component_type.rsplit('.')
+        class_name = aux.pop()
+        # Only capitalize the first letter
+        class_name = class_name.replace(class_name[0], class_name[0].upper(), 1)
+        class_ = getattr(cmp, class_name)
+        return class_(component, circuit_nodes)
+
     def _attach_to_nodes(self):
         nodes = self.get_nodes()
         for node in nodes:
-            node.attach_component(self)
+            nodes[node].attach_component(self)
 
-    @staticmethod
-    def _check_input_properties(input_properties, keys_allowed):
+    def _check_input_properties(self, input_properties, keys_allowed):
         # Keys allow is a dictionary with keys names = name properties and each key with a dictionary with lower_limit
         # and upper_limit keys and values.
         try:
@@ -71,8 +101,7 @@ class Component(ABC, GeneralData):
                 raise PropertyNameError(
                     "Invalid property. %s  is not in %s]" % keys_allowed)
 
-    @staticmethod
-    def _check_input_nodes(nodes, n_nodes):
+    def _check_input_nodes(self, nodes, n_nodes):
         check_type(nodes, list)
         if len(nodes) == n_nodes:
             return
@@ -98,22 +127,26 @@ class Component(ABC, GeneralData):
             results[key] = self._calculated_result(key)
         return results
 
+    def eval_equations(self):
+        # Return a matrix of two columns with the calculation result of each side of the equation.
+        results = []
+        int_eq = self._eval_intrinsic_equations()
+        if int_eq is not None:
+            results.append(int_eq)
+        properties = self.get_basic_properties()
+        for key in properties:
+            results.append(self._eval_basic_equation(key))
+        return results
+
     @abstractmethod
-    def _eval_equation_error(self, basic_property):
-        # Return floats with equation error.
+    def _eval_intrinsic_equations(self):
         pass
 
-    def eval_error(self, error):
-        # Input a list of float and return a list with floats append of equations error.
-        properties = self.get_basic_properties()
-        if len(properties) == 0:
-            error.append(self._eval_equation_error(properties))
-        else:
-            for key in properties:
-                error.append(self._eval_equation_error(key))
-        return error
+    @abstractmethod
+    def _eval_basic_equation(self, basic_property):
+        pass
 
-    def get_name_input_properties(self):
+    def get_id_input_properties(self):
         # Return a dictview with the names of inputs of properties
         return self._basic_properties.keys()
 
@@ -131,20 +164,35 @@ class Component(ABC, GeneralData):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._optional_properties
 
-    def get_component_type(self):
+    def get_type(self):
         return self._component_type
 
     def get_inlet_nodes(self):
         """
-        Return array of nodes. Return all inlet nodes of the component, first with the lowest pressure.
+        Return all inlet nodes of the component, keys ordered by lowest to higher pressure.
         For example, first node of two stage compressor is the suction). Equally pressure without specific order.
         """
         return self._inlet_nodes
 
+    def get_id_inlet_nodes(self):
+            return self.get_inlet_nodes().keys()
+
+    def get_inlet_node(self, id_node):
+            return self.get_inlet_nodes()[id_node]
+
     def get_nodes(self):
-        # Return array. Return all nodes connected with the component. First inlet nodes.
-        return self.get_inlet_nodes() + self.get_outlet_nodes()
+        # Return all nodes connected with the component. First inlet nodes.
+        return {**self.get_inlet_nodes(), **self.get_outlet_nodes()}
+
+    def get_node(self, id_node):
+            return self.get_nodes()[id_node]
 
     def get_outlet_nodes(self):
-        # Return array of nodes in the same order criterion of get_inlet_nodes
+        # Return nodes in the same order criterion of get_inlet_nodes
         return self._outlet_nodes
+
+    def get_outlet_node(self, id_node):
+            return self.get_outlet_nodes()[id_node]
+
+    def get_id_outlet_nodes(self):
+        return self.get_outlet_nodes().keys()
