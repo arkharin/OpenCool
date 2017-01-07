@@ -20,6 +20,14 @@ class Refrigerant:
     def __init__(self, backend, refrigerant):
         self._ref = Cp.AbstractState(backend, refrigerant)
 
+    @staticmethod
+    def build(backend, refrigerant):
+        if backend is 'CoolPropHeos':
+            return Refrigerant('HEOS', refrigerant)
+        else:
+            print('Error loading refrigerant library. %s is not found', backend)
+            exit(1)
+
     def _update(self, property_type_1, property_1, property_type_2, property_2):
         input_keys = Cp.CoolProp.generate_update_pair(property_type_1, property_1, property_type_2, property_2)
         self._ref.update(input_keys[0], input_keys[1], input_keys[2])
