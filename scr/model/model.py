@@ -18,7 +18,7 @@ def save(data, file_name, folder='', home_path=Path.home()):
         if fp.exists():
             break
         else:
-            user_input = input("This directory doesn't exist. Do you want create it? [yes]/no: ")
+            user_input = input("This folder doesn't exist. Do you want create it? [yes]/no: ")
             if _user_decision(user_input):
                 fp.mkdir()
                 break
@@ -29,7 +29,11 @@ def save(data, file_name, folder='', home_path=Path.home()):
     fp = Path(home_path, folder, file_name + _EXTENSION)
     while True:
         if fp.exists():
-            user_input = input('This file already exists. Do you want rename it? [yes]/no: ')
+            if fp.is_dir():
+                print("It's a folder, not a file")
+                _user_decision('yes')
+            else:
+                user_input = input('This file already exists. Do you want rename it? [yes]/no: ')
             if _user_decision(user_input):
                 name = input('Write new file name: ')
                 fp = Path(home_path, folder, name)
