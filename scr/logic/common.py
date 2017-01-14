@@ -18,7 +18,7 @@ MIN_FLOAT_VALUE = float_info.min
 
 class GeneralData:
     def __init__(self, name, identifier):
-        check_input_str(name)
+        check_type(name, str)
         self._name = name
         check_input_int(identifier, lower_limit=0)
         self._id = identifier
@@ -48,8 +48,11 @@ def check_input_int(value, lower_limit=MIN_INT_VALUE, upper_limit=MAX_INT_VALUE)
         raise TypeValueError("Bad type for the value. %s it is not int." % value)
 
 
-def check_input_str(value):
-    if type(value) is not str:
+def check_input_str(value, value_allowed):
+    if type(value) is str:
+        if value != value_allowed:
+            raise ValuePropertyError("Invalid string. %s is not %s" % (value, value_allowed))
+    else:
         raise TypeValueError("Bad type for the value. %s it is not str." % value)
 
 

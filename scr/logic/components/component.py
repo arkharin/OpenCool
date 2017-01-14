@@ -40,7 +40,8 @@ class Component(ABC, GeneralData):
 
         super().__init__(data[self.NAME], data[self.IDENTIFIER])
 
-        check_input_str(data[self.COMPONENT_TYPE])
+        check_type(data[self.COMPONENT_TYPE], str)
+        self._component_library = data[self.COMPONENT_TYPE]
         self._component_type = data[self.COMPONENT_TYPE].rsplit('.')[0]
 
         id_inlet_nodes = data[self.INLET_NODES]
