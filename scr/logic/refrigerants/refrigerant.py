@@ -17,12 +17,13 @@ class Refrigerant:
     PRESSURE = Cp.iP
     TEMPERATURE = Cp.iT
 
+    # If is not specify, all units in SI.
     def __init__(self, backend, refrigerant):
         self._ref = Cp.AbstractState(backend, refrigerant)
 
     @staticmethod
     def build(backend, refrigerant):
-        if backend is 'CoolPropHeos':
+        if backend == 'CoolPropHeos':
             return Refrigerant('HEOS', refrigerant)
         else:
             print('Error loading refrigerant library. %s is not found', backend)
@@ -33,36 +34,49 @@ class Refrigerant:
         self._ref.update(input_keys[0], input_keys[1], input_keys[2])
 
     def T(self, property_type_1, property_1, property_type_2, property_2):
+        # Return temperature in Kelvin.
         self._update(property_type_1, property_1, property_type_2, property_2)
         return self._ref.T()
 
     def p(self, property_type_1, property_1, property_type_2, property_2):
+        # Return absolute pressure un Pascals.
         self._update(property_type_1, property_1, property_type_2, property_2)
         return self._ref.p()
 
     def h(self, property_type_1, property_1, property_type_2, property_2):
+        # Return enthalpy in J/kg.
         self._update(property_type_1, property_1, property_type_2, property_2)
         return self._ref.hmass()
 
     def d(self, property_type_1, property_1, property_type_2, property_2):
+        # Return density in kg/m3.
         self._update(property_type_1, property_1, property_type_2, property_2)
         return self._ref.rhomass()
 
     def s(self, property_type_1, property_1, property_type_2, property_2):
+        # Return entropy in J/kg·K.
         self._update(property_type_1, property_1, property_type_2, property_2)
         return self._ref.smass()
 
     def Q(self, property_type_1, property_1, property_type_2, property_2):
+        # Return vapor quality; 0 = saturated liquid, 1 = saturated vapour, <0 if one phase.
         self._update(property_type_1, property_1, property_type_2, property_2)
         return self._ref.Q()
 
     def T_crit(self):
+        # Return critical temperature in Kelvin.
         return self._ref.T_critical()
 
     def T_sat(self, pressure, Q=1.0):
+        # Return saturated temperature in Kelvin.
         self._ref.update(Cp.PQ_INPUTS, pressure, Q)
         return self._ref.T()
 
     def p_sat(self, temperature, Q=1.0):
+        # Return critical pressure in Pascals.
         self._ref.update(Cp.QT_INPUTS, Q, temperature)
         return self._ref.p()
+
+    def name(self):
+        # Return a string.
+        return self._ref.fluid_names()[0]

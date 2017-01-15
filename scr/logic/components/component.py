@@ -25,6 +25,7 @@ class Component(ABC, GeneralData):
     OTHER = 'other'
     # Parameters
     BASIC_PROPERTIES = 'basic properties'
+    BASIC_PROPERTIES_CALCULATED = 'basic properties calculate'
     COMPONENTS = 'components'
     COMPONENT_TYPE = 'type'
     IDENTIFIER = 'id'
@@ -32,15 +33,21 @@ class Component(ABC, GeneralData):
     NAME = 'name'
     NODES = 'nodes'
     OPTIONAL_PROPERTIES = 'optional properties'
+    OPTIONAL_PROPERTIES_CALCULATED = 'optional properties calculate'
     OUTLET_NODES = 'outlet nodes'
     REFRIGERANT = 'refrigerant'
+    VALUE = 'value'
+    UNIT = 'unit'
+    LOWER_LIMIT = 'lower_limit'
+    UPPER_LIMIT = 'upper_limit'
 
     def __init__(self, data, circuit_nodes, n_inlet_nodes, n_outlet_nodes, basic_properties_allowed,
                  optional_properties_allowed):
 
         super().__init__(data[self.NAME], data[self.IDENTIFIER])
 
-        check_input_str(data[self.COMPONENT_TYPE])
+        check_type(data[self.COMPONENT_TYPE], str)
+        self._component_library = data[self.COMPONENT_TYPE]
         self._component_type = data[self.COMPONENT_TYPE].rsplit('.')[0]
 
         id_inlet_nodes = data[self.INLET_NODES]
@@ -94,9 +101,10 @@ class Component(ABC, GeneralData):
 
         for key in input_properties:
             if key in keys_allowed:
-                    check_type(input_properties[key], float)
-                    check_input_float(input_properties[key], keys_allowed[key]['lower_limit'],
-                                      keys_allowed[key]['upper_limit'])
+                    check_type(input_properties[key][self.VALUE], float)
+                    check_input_float(input_properties[key][self.VALUE], keys_allowed[key][self.LOWER_LIMIT],
+                                      keys_allowed[key][self.UPPER_LIMIT])
+                    check_input_str(input_properties[key][self.UNIT], keys_allowed[key][self.UNIT])
             else:
                 raise PropertyNameError(
                     "Invalid property. %s  is not in %s]" % keys_allowed)
@@ -124,8 +132,12 @@ class Component(ABC, GeneralData):
         # Return a dictionary. Keys are de name of properties calculated and items their values.
         results = {}
         for key in properties:
-            results[key] = self._calculated_result(key)
+            results[key] = {self.VALUE: self._calculated_result(key), self.UNIT: self.get_property_unit(properties[key])
+                            }
         return results
+
+    def get_property_unit(self, prop):
+        return prop[self.UNIT]
 
     def eval_equations(self):
         # Return a matrix of two columns with the calculation result of each side of the equation.
@@ -151,18 +163,26 @@ class Component(ABC, GeneralData):
         return self._basic_properties.keys()
 
     def get_basic_property(self, basic_property):
-        return self._basic_properties[basic_property]
+        return self._basic_properties[basic_property][self.VALUE]
 
     def get_basic_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._basic_properties
 
+    def get_basic_properties_results(self):
+        # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
+        return self._basic_properties_results
+
     def get_optional_property(self, optional_property):
-        return self._optional_properties[optional_property]
+        return self._optional_properties[optional_property][self.VALUE]
 
     def get_optional_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._optional_properties
+
+    def get_optional_properties_results(self):
+        # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
+        return self._optional_properties_results
 
     def get_type(self):
         return self._component_type
@@ -192,7 +212,22 @@ class Component(ABC, GeneralData):
         return self._outlet_nodes
 
     def get_outlet_node(self, id_node):
-            return self.get_outlet_nodes()[id_node]
+        return self.get_outlet_nodes()[id_node]
 
     def get_id_outlet_nodes(self):
         return self.get_outlet_nodes().keys()
+
+    def get_component_library(self):
+        return self._component_library
+
+    def get_save_object(self):
+        save_object = {self.NAME: self.get_name(), self.IDENTIFIER: self.get_id()}
+        save_object[self.COMPONENT_TYPE] = self.get_component_library()
+        save_object[self.INLET_NODES] = list(self.get_id_inlet_nodes())
+        save_object[self.OUTLET_NODES] = list(self.get_outlet_nodes())
+
+        save_object[self.BASIC_PROPERTIES] = self.get_basic_properties()
+        save_object[self.BASIC_PROPERTIES_CALCULATED] = self.get_basic_properties_results()
+        save_object[self.OPTIONAL_PROPERTIES] = self.get_optional_properties()
+        save_object[self.OPTIONAL_PROPERTIES_CALCULATED] = self.get_optional_properties_results()
+        return save_object

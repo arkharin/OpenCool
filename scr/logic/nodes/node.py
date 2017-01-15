@@ -7,10 +7,10 @@ Define the abstract class node.
 """
 
 from abc import ABC, abstractmethod
-from scr.logic.errors import PropertyNameError
-from scr.logic.common import GeneralData
-from scr.logic.refrigerant import Refrigerant
 from importlib import import_module
+from scr.logic.common import GeneralData
+from scr.logic.errors import PropertyNameError
+from scr.logic.refrigerants.refrigerant import Refrigerant
 
 
 class Node(ABC, GeneralData):
@@ -122,6 +122,16 @@ class Node(ABC, GeneralData):
     def get_refrigerant(self):
         return self._refrigerant
 
+    def get_properties (self):
+        # Return dict with thermodynamic properties evaluated. Keys are global name of the properties.
+        properties = {'pressure': self.pressure()}
+        properties['temperature'] = self.temperature()
+        properties['enthalpy'] = self.enthalpy()
+        properties['density'] = self.density()
+        properties['entropy'] = self.entropy()
+        properties['quality'] = self.quality()
+        return properties
+
     @abstractmethod
     def get_type_property_base_1(self):
         pass
@@ -203,3 +213,7 @@ class Node(ABC, GeneralData):
         self._set_property(property_type_2, property_2)
 
         self._init_essential_properties(property_type_1, property_1, property_type_2, property_2)
+
+    def get_save_object(self):
+        return {'name': self.get_name(), 'id': self.get_id(), 'Units': 'All units in SI',
+                'Results': self.get_properties()}

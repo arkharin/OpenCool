@@ -8,7 +8,7 @@ Define the circuit class
 
 import scr.logic.components.component as cmp
 import scr.logic.nodes.node as nd
-import scr.logic.refrigerant as ref
+import scr.logic.refrigerants.refrigerant as ref
 from scr.logic.common import GeneralData
 from scr.logic.errors import IdDuplicated
 
@@ -29,9 +29,9 @@ class Circuit(GeneralData):
     def __init__(self, input_circuit):
         super().__init__(input_circuit[self.NAME], input_circuit[self.IDENTIFIER])
         self._ref_lib = input_circuit[self.REF_LIB]
-        self._refrigerant = ref.Refrigerant.build(self.get_ref_lib(), input_circuit[self.REFRIGERANT])
+        self._refrigerant = ref.Refrigerant.build(self.get_refregirrant_library(), input_circuit[self.REFRIGERANT])
         self._nodes = {}
-        self._nodes = self._load_nodes(input_circuit, self.get_ref_lib())
+        self._nodes = self._load_nodes(input_circuit, self.get_refregirrant_library())
         self._components = {}
         self._components = self._load_components(input_circuit)
         # Information that is generated from nodes and components every time
@@ -132,7 +132,7 @@ class Circuit(GeneralData):
     def get_refrigerant(self):
         return self._refrigerant
 
-    def get_ref_lib(self):
+    def get_refregirrant_library(self):
         return self._ref_lib
 
     def search_components_by_type(self, component_type):
@@ -145,3 +145,23 @@ class Circuit(GeneralData):
         for mass_flow in mass_flows:
             self.get_mass_flows()[i] = mass_flow
             i += 1
+
+    def get_save_object(self):
+        save_object = {'name': self.get_name()}
+        save_object['id'] = self.get_id()
+
+        refrigerant = self.get_refrigerant()
+        save_object['refrigerant'] = refrigerant.name()
+        save_object['refrigerant_library'] = self.get_refregirrant_library()
+
+        save_object['nodes'] = []
+        nodes = self.get_nodes()
+        for i in nodes:
+            save_object['nodes'].append(nodes[i].get_save_object())
+
+        save_object['components'] = []
+        components = self.get_components()
+        for i in components:
+            save_object['components'].append(components[i].get_save_object())
+
+        return save_object

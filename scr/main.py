@@ -4,6 +4,7 @@
 
 import scr.logic.circuit as circ
 from scr.logic.solvers.solver import Solver
+from scr.model.model import load, save
 
 input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refrigerant_library': 'CoolPropHeos',
                  'nodes': [{'name': 'n1', 'id': 1}, {'name': 'n2', 'id': 2}, {'name': 'n3', 'id': 3},{'name': 'n4', 'id': 4}],
@@ -23,7 +24,9 @@ input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refriger
                                  'optional properties': {}}
                                 ]}
 
-circuit = circ.Circuit(input_circuit)
+#save(input_circuit, 'input_circuit', 'OpenCool circuits')
+load_circuit = load('circuit_solved', 'OpenCool circuits')
+circuit = circ.Circuit(load_circuit)
 
 presolver = 'presolver_v01'
 solver = 'simple_circuit_solver'
@@ -41,4 +44,8 @@ print(error)
 print()
 print('The circuit solve is:\n')
 print(circuit_solved)
+save_circuit = circuit_solved.get_save_object()
+save(save_circuit, 'circuit_solved', 'OpenCool circuits')
+
 print('end')
+
