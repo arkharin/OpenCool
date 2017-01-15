@@ -144,7 +144,8 @@ class Component(ABC, GeneralData):
         results = []
         int_eq = self._eval_intrinsic_equations()
         if int_eq is not None:
-            results.append(int_eq)
+            for i in int_eq:
+                results.append(i)
         properties = self.get_basic_properties()
         for key in properties:
             results.append(self._eval_basic_equation(key))
@@ -152,10 +153,12 @@ class Component(ABC, GeneralData):
 
     @abstractmethod
     def _eval_intrinsic_equations(self):
+        # Return list of list with pairs of the calculations of each side of the equations.
         pass
 
     @abstractmethod
     def _eval_basic_equation(self, key_basic_property):
+        # Return list with the calculations of each side of the equation. Only one equation for each key_basic_property.
         pass
 
     # General methods:

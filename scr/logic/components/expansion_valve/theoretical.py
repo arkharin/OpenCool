@@ -19,7 +19,7 @@ class Theoretical(Component):
         super().__init__(data, circuit_nodes, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
     def _calculated_result(self, key):
-            return None
+        return None
 
     def _eval_basic_equation(self, key_basic_property):
         return None
@@ -33,4 +33,4 @@ class Theoretical(Component):
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
 
-        return [h_in / 1000.0, h_out / 1000.0]
+        return [[h_in / 1000.0, h_out / 1000.0]]
