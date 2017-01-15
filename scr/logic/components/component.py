@@ -132,10 +132,11 @@ class Component(ABC, GeneralData):
         # Return a dictionary. Keys are de name of properties calculated and items their values.
         results = {}
         for key in properties:
-            results[key] = {self.VALUE: self._calculated_result(key), self.UNIT: self.get_property_unit(properties[key])}
+            results[key] = {self.VALUE: self._calculated_result(key), self.UNIT: self.get_property_unit(properties[key])
+                            }
         return results
 
-    def get_property_unit (self, prop):
+    def get_property_unit(self, prop):
         return prop[self.UNIT]
 
     def eval_equations(self):
