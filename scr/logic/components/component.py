@@ -85,6 +85,7 @@ class Component(ABC, GeneralData):
         class_ = getattr(cmp, class_name)
         return class_(component, circuit_nodes)
 
+    # __init__ relate methods:
     def _attach_to_nodes(self):
         nodes = self.get_nodes()
         for node in nodes:
@@ -116,6 +117,7 @@ class Component(ABC, GeneralData):
         else:
             raise ValueError('Number of nodes is wrong. %s is not %s' % (len(nodes), n_nodes))
 
+    # PostSolver evaluation methods
     @abstractmethod
     def _calculated_result(self, key):
         # Return a list with length 2. In first position the name of the property calculated and in the second de value.
@@ -136,9 +138,7 @@ class Component(ABC, GeneralData):
                             }
         return results
 
-    def get_property_unit(self, prop):
-        return prop[self.UNIT]
-
+    # Solver evaluation methods:
     def eval_equations(self):
         # Return a matrix of two columns with the calculation result of each side of the equation.
         results = []
@@ -155,9 +155,10 @@ class Component(ABC, GeneralData):
         pass
 
     @abstractmethod
-    def _eval_basic_equation(self, basic_property):
+    def _eval_basic_equation(self, key_basic_property):
         pass
 
+    # General methods:
     def get_id_input_properties(self):
         # Return a dictview with the names of inputs of properties
         return self._basic_properties.keys()
@@ -220,7 +221,11 @@ class Component(ABC, GeneralData):
     def get_component_library(self):
         return self._component_library
 
+    def get_property_unit(self, prop):
+        return prop[self.UNIT]
+
     def get_save_object(self):
+        # Return save object
         save_object = {self.NAME: self.get_name(), self.IDENTIFIER: self.get_id()}
         save_object[self.COMPONENT_TYPE] = self.get_component_library()
         save_object[self.INLET_NODES] = list(self.get_id_inlet_nodes())

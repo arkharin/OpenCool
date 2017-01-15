@@ -21,7 +21,7 @@ class Theoretical(Component):
     def _calculated_result(self, key):
             return None
 
-    def _eval_basic_equation(self, basic_property):
+    def _eval_basic_equation(self, key_basic_property):
         return None
 
     def _eval_intrinsic_equations(self):

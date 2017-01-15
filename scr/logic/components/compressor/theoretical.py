@@ -65,8 +65,8 @@ class Theoretical(cmp):
             return PropertyNameError(
                     "Invalid property. %s  is not in %s]" % key)
 
-    def _eval_basic_equation(self, basic_property):
-        return [self.get_basic_property(basic_property), self._calculated_result(basic_property)]
+    def _eval_basic_equation(self, key_basic_property):
+        return [self.get_basic_property(key_basic_property), self._calculated_result(key_basic_property)]
 
     def _eval_intrinsic_equations(self):
         return None
