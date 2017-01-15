@@ -7,20 +7,22 @@ Define the Condenser component.
 """
 
 from scr.logic.common import MAX_FLOAT_VALUE
-from scr.logic.components.component import Component
+from scr.logic.components.component import Component as cmp
 from scr.logic.errors import PropertyNameError
 
 
-class Theoretical(Component):
+class Theoretical(cmp):
     HEATING_POWER = 'heating_power'
     PRESSURE_LOSE = 'pressure_lose'
     SATURATION_TEMPERATURE = 'saturation_temperature'
     SUBCOOLING = 'subcooling'
 
-    basic_properties_allowed = {SATURATION_TEMPERATURE: {'lower_limit': 0.0, 'upper_limit': MAX_FLOAT_VALUE},
-                                HEATING_POWER: {'lower_limit': 0.0, 'upper_limit': MAX_FLOAT_VALUE},
-                                SUBCOOLING: {'lower_limit': 0.0, 'upper_limit': MAX_FLOAT_VALUE},
-                                PRESSURE_LOSE: {'lower_limit': 0.0, 'upper_limit': MAX_FLOAT_VALUE}}
+    basic_properties_allowed = {SATURATION_TEMPERATURE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE,
+                                                         cmp.UNIT: 'K'},
+                                HEATING_POWER: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kW'},
+                                SUBCOOLING: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'K'},
+                                PRESSURE_LOSE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kPa'}
+                                }
 
     optional_properties_allowed = {}
 
@@ -33,24 +35,24 @@ class Theoretical(Component):
         id_outlet_node = list(self.get_id_outlet_nodes())[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
 
-        if key is self.HEATING_POWER:
+        if key == self.HEATING_POWER:
             h_in = inlet_node.enthalpy()
             h_out = outlet_node.enthalpy()
             mass_flow = outlet_node.mass_flow()
             return mass_flow*(h_in-h_out) / 1000.0
 
-        elif key is self.SATURATION_TEMPERATURE:
+        elif key == self.SATURATION_TEMPERATURE:
             p_in = inlet_node.pressure()
             ref = inlet_node.get_refrigerant()
             return ref.T_sat(p_in)
 
-        elif key is self.SUBCOOLING:
+        elif key == self.SUBCOOLING:
             t_out = outlet_node.temperature()
             p_out = outlet_node.pressure()
             ref = outlet_node.get_refrigerant()
             return ref.T_sat(p_out) - t_out
 
-        elif key is self.PRESSURE_LOSE:
+        elif key == self.PRESSURE_LOSE:
             p_in = inlet_node.pressure()
             p_out = outlet_node.pressure()
             return (p_in - p_out) / 1000.0
