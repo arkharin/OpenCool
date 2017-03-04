@@ -25,7 +25,8 @@ input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refriger
                                 ]}
 
 #save(input_circuit, 'input_circuit', 'OpenCool circuits')
-load_circuit = load('circuit_solved', 'OpenCool circuits')
+#load_circuit = load('input_circuit', 'OpenCool circuits')
+load_circuit = load('input_circuit_two_stage', 'OpenCool circuits')
 circuit = circ.Circuit(load_circuit)
 
 presolver = 'presolver_v01'

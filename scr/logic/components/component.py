@@ -19,7 +19,7 @@ class Component(ABC, GeneralData):
     EXPANSION_VALVE = 'expansion_valve'
     CONDENSER = 'condenser'
     EVAPORATOR = 'evaporator'
-    MIXER_FLOW = 'mix_flow'  # N outlets but only 1 inlet
+    MIXER_FLOW = 'mixer_flow'  # N outlets but only 1 inlet
     SEPARATOR_FLOW = 'separator_flow'  # Only 1 outlet and N inlets
     TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
     OTHER = 'other'
@@ -87,9 +87,12 @@ class Component(ABC, GeneralData):
 
     # __init__ relate methods:
     def _attach_to_nodes(self):
-        nodes = self.get_nodes()
-        for node in nodes:
-            nodes[node].attach_component(self)
+        for id_node in self.get_inlet_nodes():
+            node = self.get_node(id_node)
+            node.attach_inlet_component(self)
+        for id_node in self.get_outlet_nodes():
+            node = self.get_node(id_node)
+            node.attach_outlet_component(self)
 
     def _check_input_properties(self, input_properties, keys_allowed):
         # Keys allow is a dictionary with keys names = name properties and each key with a dictionary with lower_limit
@@ -193,19 +196,19 @@ class Component(ABC, GeneralData):
 
     def get_inlet_nodes(self):
         """
-        Return all inlet nodes of the component, keys ordered by lowest to higher pressure.
+        Return a dictionary of all inlet nodes of the component, keys ordered by lowest to higher pressure.
         For example, first node of two stage compressor is the suction). Equally pressure without specific order.
         """
         return self._inlet_nodes
 
     def get_id_inlet_nodes(self):
-            return self.get_inlet_nodes().keys()
+            return list(self.get_inlet_nodes().keys())
 
     def get_inlet_node(self, id_node):
             return self.get_inlet_nodes()[id_node]
 
     def get_nodes(self):
-        # Return all nodes connected with the component. First inlet nodes.
+        # Return a dictionary with all nodes connected with the component. First inlet nodes.
         return {**self.get_inlet_nodes(), **self.get_outlet_nodes()}
 
     def get_node(self, id_node):
@@ -219,7 +222,8 @@ class Component(ABC, GeneralData):
         return self.get_outlet_nodes()[id_node]
 
     def get_id_outlet_nodes(self):
-        return self.get_outlet_nodes().keys()
+        # Return a list of all outlet nodes of the component
+        return list(self.get_outlet_nodes().keys())
 
     def get_component_library(self):
         return self._component_library
@@ -231,8 +235,8 @@ class Component(ABC, GeneralData):
         # Return save object
         save_object = {self.NAME: self.get_name(), self.IDENTIFIER: self.get_id()}
         save_object[self.COMPONENT_TYPE] = self.get_component_library()
-        save_object[self.INLET_NODES] = list(self.get_id_inlet_nodes())
-        save_object[self.OUTLET_NODES] = list(self.get_outlet_nodes())
+        save_object[self.INLET_NODES] = self.get_id_inlet_nodes()
+        save_object[self.OUTLET_NODES] = self.get_id_outlet_nodes()
 
         save_object[self.BASIC_PROPERTIES] = self.get_basic_properties()
         save_object[self.BASIC_PROPERTIES_CALCULATED] = self.get_basic_properties_results()

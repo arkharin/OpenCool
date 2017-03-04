@@ -27,7 +27,8 @@ class Node(ABC, GeneralData):
 
     def __init__(self, data, refrigerant):
         super().__init__(data[self.NAME], data[self.IDENTIFIER])
-        self._attach_components = []
+        self._inlet_components_attached = []
+        self._outlet_components_attached = []
         self._refrigerant = refrigerant
         self._id_mass_flow = self.NO_INIT
         self._mass_flow = self.NO_INIT
@@ -108,6 +109,22 @@ class Node(ABC, GeneralData):
         else:
             self._attach_components.append(component)
 
+    def attach_inlet_component(self, component):
+        id_component = component.get_id()
+        if id_component not in self.get_components_attached():
+            self._add_inlet_component(component)
+
+    def _add_inlet_component(self, component):
+        self._inlet_components_attached.append(component)
+
+    def attach_outlet_component(self, component):
+        id_component = component.get_id()
+        if id_component not in self.get_components_attached():
+            self._add_outlet_component(component)
+
+    def _add_outlet_component(self, component):
+        self._outlet_components_attached.append(component)
+
     def calculate_node(self):
         self._pressure = self.pressure()
         self._temperature = self.temperature()
@@ -117,7 +134,16 @@ class Node(ABC, GeneralData):
         self._quality = self.quality()
 
     def get_components_attached(self):
-        return self._attach_components
+        # Return a list of attached components.
+        return self.get_inlet_components_attached() + self.get_outlet_components_attached()
+
+    def get_inlet_components_attached(self):
+        # Return a list with all components with this node as inlet node
+        return self._inlet_components_attached
+
+    def get_outlet_components_attached(self):
+        # Return a list with all components with this node as outlet node
+        return self._outlet_components_attached
 
     def get_refrigerant(self):
         return self._refrigerant

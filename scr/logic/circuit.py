@@ -43,32 +43,54 @@ class Circuit(GeneralData):
         return [0.0] * (2 * len(separate_components) + 1)
 
     def _link_nodes_mass_flows(self):
-        # TODO Only works for 1 inlet for SEPARATOR_FLOW or 1 outlet for MIXER_FLOW.
         # Search components that modify flows
         mix_components = self.search_components_by_type(cmp.Component.MIXER_FLOW)
         separate_components = self.search_components_by_type(cmp.Component.SEPARATOR_FLOW)
         flow_components = {**separate_components, **mix_components}
         # Create and fill id_mass_flow in nodes.
-        id_mass_flow = 0
-        prior_prior_id_mass_flow = []
-        total_id_mass_flow = 1
         if len(flow_components) == 0:
-            component = self.get_components()
-            keys = list(component.keys())
-            component = self.get_component(keys.pop())
-            self._fill_id_mass_flow_inlet_nodes(id_mass_flow, prior_prior_id_mass_flow, component, total_id_mass_flow)
+            id_mass_flow = 0
+            id_component = self.get_components_id()[0]
+            component = self.get_component(id_component)
+            id_node = component.get_id_outlet_nodes()[0]
+            outlet_node = component.get_outlet_node(id_node)
+            self._fill_id_mass_flow_nodes(id_mass_flow, outlet_node, {id_component:component})
         else:
-            for component in flow_components:
-                component = separate_components[component]
-                self._fill_id_mass_flow_inlet_nodes(id_mass_flow, prior_prior_id_mass_flow, component,
-                                                    total_id_mass_flow)
+            id_mass_flow = -1
+            for id_component in mix_components:
+                id_mass_flow += 1
+                component = self.get_component(id_component)
+                # A mix component only have one outlet
+                id_outlet_node = component.get_id_outlet_nodes()[0]
+                outlet_node = component.get_outlet_node(id_outlet_node)
+                self._fill_id_mass_flow_nodes(id_mass_flow, outlet_node, flow_components)
+
+            for id_component in separate_components:
+                component = self.get_component(id_component)
+                outlet_nodes = component.get_outlet_nodes()
+                for id_node in outlet_nodes:
+                    node = component.get_outlet_node(id_node)
+                    id_mass_flow += 1
+                    self._fill_id_mass_flow_nodes(id_mass_flow, node, flow_components)
+
         # Add to nodes _mass_flows list
         mass_flows = self.get_mass_flows()
         nodes = self.get_nodes()
-        for node in nodes:
-            node = nodes[node]
+        for id_node in nodes:
+            node = nodes[id_node]
             node.add_mass_flow(mass_flows)
         return nodes
+
+    def _fill_id_mass_flow_nodes(self, id_mass_flow, node, stop_components):
+        while True:
+            node.set_id_mass_flow(id_mass_flow)
+            # This components only have one outlet because is not a flow component.
+            inlet_component = node.get_inlet_components_attached()[0]
+            id_inlet_component = inlet_component.get_id()
+            if id_inlet_component in stop_components:
+                break
+            else:
+                node = inlet_component.get_outlet_node(inlet_component.get_id_outlet_nodes()[0])
 
     def _load_components(self, input_circuit):
         components = {}
@@ -90,35 +112,14 @@ class Circuit(GeneralData):
             nodes[identifier] = nd.Node.build(node, refrigerant, ref_lib)
         return nodes
 
-    def _fill_id_mass_flow_inlet_nodes(self, prior_id_mass_flow, prior_prior_id_mass_flow, component,
-                                       total_id_mass_flow):
-        # TODO  check if prior_id_mass_flow is not affected by the recurrence
-        inlet_nodes = component.get_inlet_nodes()
-        outlet_nodes = component.get_outlet_nodes()
-        total_next_outlet_nodes = len(outlet_nodes)
-        if total_next_outlet_nodes > 1:
-            id_mass_flow = prior_prior_id_mass_flow.pop()
-        else:
-            id_mass_flow = prior_id_mass_flow
-        total_nodes = len(inlet_nodes)
-        for i in inlet_nodes:
-            node = inlet_nodes[i]
-            if total_nodes > 1:
-                prior_prior_id_mass_flow.append(prior_id_mass_flow)
-                id_mass_flow = total_id_mass_flow
-                total_id_mass_flow += 1
-            if not node.is_mass_flow_init():
-                node.set_id_mass_flow(id_mass_flow)
-                next_components = node.get_components_attached()
-                for next_component in next_components:
-                    self._fill_id_mass_flow_inlet_nodes(id_mass_flow, prior_prior_id_mass_flow, next_component,
-                                                        total_id_mass_flow)
-
     def get_component(self, id_component):
         return self.get_components()[id_component]
 
     def get_components(self):
         return self._components
+
+    def get_components_id(self):
+        return list(self._components.keys())
 
     def get_mass_flows(self):
         return self._mass_flows
