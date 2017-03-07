@@ -7,12 +7,12 @@ Define the abstract class component.
 """
 
 from abc import ABC, abstractmethod
-from scr.logic.common import GeneralData, check_input_str, check_type, check_input_float
+from scr.logic.common import Element, check_input_str, check_type, check_input_float
 from scr.logic.errors import TypeValueError, PropertyNameError
 from importlib import import_module
 
 
-class Component(ABC, GeneralData):
+class Component(ABC, Element):
     NO_INIT = None
     # Main types
     COMPRESSOR = 'compressor'

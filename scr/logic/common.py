@@ -16,7 +16,7 @@ MAX_FLOAT_VALUE = float_info.max
 MIN_FLOAT_VALUE = float_info.min
 
 
-class GeneralData:
+class Element:
     def __init__(self, name, identifier):
         check_type(name, str)
         self._name = name

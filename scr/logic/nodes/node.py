@@ -8,12 +8,12 @@ Define the abstract class node.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
-from scr.logic.common import GeneralData
+from scr.logic.common import Element
 from scr.logic.errors import PropertyNameError
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
 
-class Node(ABC, GeneralData):
+class Node(ABC, Element):
     NAME = 'name'
     IDENTIFIER = 'id'
     # Thermodynamic properties

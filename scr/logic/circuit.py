@@ -9,11 +9,11 @@ Define the circuit class
 import scr.logic.components.component as cmp
 import scr.logic.nodes.node as nd
 import scr.logic.refrigerants.refrigerant as ref
-from scr.logic.common import GeneralData
+from scr.logic.common import Element
 from scr.logic.errors import IdDuplicated
 
 
-class Circuit(GeneralData):
+class Circuit(Element):
     BASIC_PROPERTIES = 'basic properties'
     COMPONENTS = 'components'
     COMPONENT_TYPE = 'type'
