@@ -25,8 +25,11 @@ input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refriger
                                 ]}
 
 #save(input_circuit, 'input_circuit', 'OpenCool circuits')
-load_circuit = load('circuit_solved', 'OpenCool circuits')
-circuit = circ.Circuit(load_circuit)
+load_circuit = load('input_circuit builder', 'OpenCool circuits')
+ser = circ.ACircuitSerializer()
+circuit = ser.deserialize(load_circuit)
+print("circuit deserilize succesfully")
+circuit = circuit.build()
 
 presolver = 'presolver_v01'
 solver = 'simple_circuit_solver'
@@ -44,8 +47,9 @@ print(error)
 print()
 print('The circuit solve is:\n')
 print(circuit_solved)
-save_circuit = circuit_solved.get_save_object()
-save(save_circuit, 'circuit_solved', 'OpenCool circuits')
+# TODO ahora ira fuera. De momento no implementado
+#save_circuit = circuit_solved.serialize()
+#save(save_circuit, 'circuit_solved', 'OpenCool circuits')
 
 print('end')
 

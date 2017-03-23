@@ -8,8 +8,10 @@ Define the abstract class node.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
-from scr.logic.common import Element
-from scr.logic.errors import PropertyNameError
+from scr.logic.restricted_inputs import StrRestricted
+from scr.logic.base_classes import Element
+from scr.logic.errors import PropertyNameError, NodeBuilderError, BuildError
+from scr.logic.warnings import NodeBuilderWarning
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
 
@@ -25,10 +27,11 @@ class Node(ABC, Element):
     TEMPERATURE = Refrigerant.TEMPERATURE
     NO_INIT = None
 
-    def __init__(self, data, refrigerant):
-        super().__init__(data[self.NAME], data[self.IDENTIFIER])
-        self._attach_components = []
-        self._refrigerant = refrigerant
+    def __init__(self, name, id_, components_id, refrigerant_object):
+        super().__init__(name, id_)
+        self._attach_components = {}
+        self._attach_components_id = components_id
+        self._refrigerant = refrigerant_object
         self._id_mass_flow = self.NO_INIT
         self._mass_flow = self.NO_INIT
         # Thermodynamic properties
@@ -38,6 +41,10 @@ class Node(ABC, Element):
         self._quality = self.NO_INIT
         self._pressure = self.NO_INIT
         self._temperature = self.NO_INIT
+
+    def configure(self, components_dict):
+        for component_id in self._attach_components_id:
+            self._attach_components[component_id] = components_dict[component_id]
 
     @staticmethod
     def build(data, refrigerant, ref_lib):
@@ -214,6 +221,73 @@ class Node(ABC, Element):
 
         self._init_essential_properties(property_type_1, property_1, property_type_2, property_2)
 
-    def get_save_object(self):
+    def serialize(self):
         return {'name': self.get_name(), 'id': self.get_id(), 'Units': 'All units in SI',
                 'Results': self.get_properties()}
+
+
+class ANodeSerializer:
+    NAME = 'name'
+    IDENTIFIER = 'id'
+    COMPONENTS = 'components'
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, node_file):
+        node = NodeBuilder(node_file[self.IDENTIFIER], node_file[self.COMPONENTS][0], node_file[self.COMPONENTS][1])
+        node.set_name(node_file[self.NAME])
+        return node
+
+    def serialize(self):
+        return {'name': self.get_name(), 'id': self.get_id(), 'Units': 'All units in SI',
+                'Results': self.get_properties()}
+
+
+class NodeBuilder:
+    def __init__(self, id_, component_id_1, component_id_2):
+        self._name = None
+        self._id = id_
+        self._components_id = [component_id_1, component_id_2]
+
+    def build(self, refrigerant_object, ref_lib):
+        # Return a node object.
+        if self._name is None:
+            raise NodeBuilderWarning('Node %s has no name', self.get_id())
+        # Check if node have two components attached.
+        if len(self._components_id) != 2:
+            raise BuildError('Node %s has %s components attached', (self._name, len(self._components_id)))
+
+        # Dynamic importing modules
+        try:
+            nd = import_module('scr.logic.nodes.' + ref_lib)
+        except ImportError:
+            print('Error loading node library. Type: %s is not found', ref_lib)
+            exit(1)
+        aux = ref_lib.rsplit('.')
+        class_name = aux.pop()
+        # Only capitalize the first letter
+        class_name = class_name.replace(class_name[0], class_name[0].upper(), 1)
+        class_ = getattr(nd, class_name)
+        return class_(self._name, self._id, self._components_id, refrigerant_object)
+
+    def set_name(self, name):
+        self._name = StrRestricted(name)
+
+    def get_id(self):
+        return self._id
+
+    def add_component(self, component_id):
+        if component_id not in self._components_id:
+            self._components_id.append(component_id)
+        else:
+            raise NodeBuilderWarning('This component is already attached at this node')
+
+    def remove_component(self, component_id):
+        try:
+            self._components_id.remove(component_id)
+        except ValueError:
+            raise NodeBuilderWarning('This component is not attached to the node')
+
+    def get_components_id(self):
+        return self._components_id

@@ -9,6 +9,7 @@ Define the Condenser component.
 from scr.logic.common import MAX_FLOAT_VALUE
 from scr.logic.components.component import Component as cmp
 from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import AComponentSerializer as ACS
 
 
 class Theoretical(cmp):
@@ -26,8 +27,8 @@ class Theoretical(cmp):
 
     optional_properties_allowed = {}
 
-    def __init__(self, data, circuit_nodes):
-        super().__init__(data, circuit_nodes, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
+    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
     def _calculated_result(self, key):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
@@ -64,3 +65,15 @@ class Theoretical(cmp):
 
     def _eval_intrinsic_equations(self):
         return None
+
+
+class ComponentSerializer (ACS):
+    COMPONENT_LIBRARY = 'Teoretical compressor'
+    pass
+
+    # def serialize(self, ...):
+    #     pass
+    #
+    # def deserialize(self, ...):
+    #     pass
+

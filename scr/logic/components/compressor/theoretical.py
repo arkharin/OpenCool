@@ -26,8 +26,8 @@ class Theoretical(cmp):
                                                          cmp.UNIT: 'm3/h'},
                                    VOLUMETRIC_EFFICIENCY: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: 1.0, cmp.UNIT: ''}}
 
-    def __init__(self, data, circuit_nodes):
-        super().__init__(data, circuit_nodes, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
+    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
     def _calculated_result(self, key):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]

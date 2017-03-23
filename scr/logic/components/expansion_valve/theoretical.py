@@ -15,8 +15,8 @@ class Theoretical(Component):
 
     optional_properties_allowed = {}
 
-    def __init__(self, data, circuit_nodes):
-        super().__init__(data, circuit_nodes, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
+    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
     def _calculated_result(self, key):
             return None

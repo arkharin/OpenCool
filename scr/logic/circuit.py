@@ -9,8 +9,10 @@ Define the circuit class
 import scr.logic.components.component as cmp
 import scr.logic.nodes.node as nd
 import scr.logic.refrigerants.refrigerant as ref
-from scr.logic.common import Element
-from scr.logic.errors import IdDuplicated
+from scr.logic.base_classes import Element, Identifier
+from scr.logic.restricted_inputs import StrRestricted
+from scr.logic.errors import IdDuplicatedError, ValuePropertyError, CircuitBuilderError, BuildError
+from scr.logic.warnings import CircuitBuilderWarning
 
 
 class Circuit(Element):
@@ -26,16 +28,33 @@ class Circuit(Element):
     REFRIGERANT = 'refrigerant'
     REF_LIB = 'refrigerant_library'
 
-    def __init__(self, input_circuit):
-        super().__init__(input_circuit[self.NAME], input_circuit[self.IDENTIFIER])
-        self._ref_lib = input_circuit[self.REF_LIB]
-        self._refrigerant = ref.Refrigerant.build(self.get_refregirrant_library(), input_circuit[self.REFRIGERANT])
+    def __init__(self, name, id_, refrigerant, refrigerant_library):
+        super().__init__(name, id_)
+        self._ref_lib = refrigerant_library
+        self._refrigerant = ref.Refrigerant.build(self.get_refregirrant_library(), refrigerant)
         self._nodes = {}
-        self._nodes = self._load_nodes(input_circuit, self.get_refregirrant_library())
         self._components = {}
-        self._components = self._load_components(input_circuit)
-        # Information that is generated from nodes and components every time
+        self._mass_flows = []
+
+    def _add_component(self, component_object):
+        # Add component object to circuit.
+        self._components[component_object.get_id()] = component_object
+
+    def _add_node(self, node_object):
+        # Add node object to circuit.
+        self._nodes[node_object.get_id()] = node_object
+
+    def configure(self):
+        # Configure circuit to solve it later
         self._mass_flows = self._create_mass_flows()
+        for node_id in self.get_nodes():
+            node = self.get_node(node_id)
+            node.configure(self.get_components())
+
+        for component_id in self.get_components():
+            component = self.get_component(component_id)
+            component.configure(self.get_nodes())
+
         self._link_nodes_mass_flows()
 
     def _create_mass_flows(self):
@@ -76,7 +95,7 @@ class Circuit(Element):
         for component in input_circuit[self.COMPONENTS]:
             identifier = component[self.IDENTIFIER]
             if identifier in components:
-                raise IdDuplicated("There are components duplicated. Identifier %i is duplicated", identifier)
+                raise IdDuplicatedError("There are components duplicated. Identifier %i is duplicated", identifier)
             components[identifier] = cmp.Component.build(component, nodes)
         return components
 
@@ -86,7 +105,7 @@ class Circuit(Element):
         for node in input_circuit[self.NODES]:
             identifier = node[self.IDENTIFIER]
             if identifier in nodes:
-                raise IdDuplicated("There are nodes duplicated.%i is duplicated", identifier)
+                raise IdDuplicatedError("There are nodes duplicated.%i is duplicated", identifier)
             nodes[identifier] = nd.Node.build(node, refrigerant, ref_lib)
         return nodes
 
@@ -111,6 +130,7 @@ class Circuit(Element):
                 node.set_id_mass_flow(id_mass_flow)
                 next_components = node.get_components_attached()
                 for next_component in next_components:
+                    next_component = self.get_component(next_component)
                     self._fill_id_mass_flow_inlet_nodes(id_mass_flow, prior_prior_id_mass_flow, next_component,
                                                         total_id_mass_flow)
 
@@ -146,22 +166,183 @@ class Circuit(Element):
             self.get_mass_flows()[i] = mass_flow
             i += 1
 
-    def get_save_object(self):
-        save_object = {'name': self.get_name()}
-        save_object['id'] = self.get_id()
 
-        refrigerant = self.get_refrigerant()
+class ACircuitSerializer:
+    BASIC_PROPERTIES = 'basic properties'
+    COMPONENTS = 'components'
+    COMPONENT_TYPE = 'type'
+    IDENTIFIER = 'id'
+    INLET_NODES = 'inlet nodes'
+    NAME = 'name'
+    NODES = 'nodes'
+    OPTIONAL_PROPERTIES = 'optional properties'
+    OUTLET_NODES = 'outlet nodes'
+    REFRIGERANT = 'refrigerant'
+    REF_LIB = 'refrigerant_library'
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, circuit_file):
+        circuit = CircuitBuilder(circuit_file[self.IDENTIFIER])
+        circuit.set_name(circuit_file[self.NAME])
+        circuit.set_refrigerant(circuit_file[self.REFRIGERANT])
+        circuit.set_refrigerant_library(circuit_file[self.REF_LIB])
+        cmp_deserialize = cmp.AComponentSerializer()
+        node_deserialize = nd.ANodeSerializer()
+        for node in circuit_file[self.NODES]:
+            new_node = node_deserialize.deserialize(node)
+            circuit.add_node(new_node)
+        for component in circuit_file[self.COMPONENTS]:
+            new_cmp = cmp_deserialize.deserialize(component)
+            circuit.add_component(new_cmp)
+
+        return circuit
+
+    def serialize(self, circuit):
+        save_object = {'name': circuit.get_name()}
+        save_object['id'] = circuit.get_id()
+
+        refrigerant = circuit.get_refrigerant()
         save_object['refrigerant'] = refrigerant.name()
-        save_object['refrigerant_library'] = self.get_refregirrant_library()
+        save_object['refrigerant_library'] = circuit.get_refregirrant_library()
 
         save_object['nodes'] = []
-        nodes = self.get_nodes()
+        nodes = circuit.get_nodes()
         for i in nodes:
-            save_object['nodes'].append(nodes[i].get_save_object())
+            save_object['nodes'].append(nodes[i].serialize())
 
         save_object['components'] = []
-        components = self.get_components()
+        components = circuit.get_components()
         for i in components:
-            save_object['components'].append(components[i].get_save_object())
+            save_object['components'].append(components[i].serialize())
 
         return save_object
+
+
+class CircuitBuilder:
+    def __init__(self, id_):
+        self._name = None
+        self._id = id_
+        self._id_count = Identifier()
+        self._id_count.add_forbidden_id(id_)
+        self._ref_lib = None
+        self._refrigerant = None
+        self._nodes = {}
+        self._components = {}
+        self._circuit = None
+
+    def build(self):
+        # Build the circuit object to solve.
+        # Check if the input data is correct.
+        if self._name is None:
+            raise CircuitBuilderWarning('Circuit %s has no name', self._id)
+        # Check if refrigerant library and refrigerant are initialized.
+        if self._ref_lib is None:
+            raise ValuePropertyError('Refrigerant library is not selected')
+        if self._refrigerant is None:
+            raise ValuePropertyError('Refrigerant is not selected')
+        # Created circuit object
+        self._circuit = Circuit(self._name, self._id, self._refrigerant.string, self._ref_lib.string)
+        for node_id in self._nodes:
+            node = self.get_node(node_id)
+            try:
+                self._circuit._add_node(node.build(self._circuit.get_refrigerant(), self._circuit.get_refregirrant_library()))
+            except BuildError:
+                raise BuildError
+        for component_id in self._components:
+            component = self.get_component(component_id)
+            try:
+                self._circuit._add_component(component.build())
+            except BuildError:
+                raise BuildError
+        # Check if there are only one circuit (circuit is close because node are well defined).
+        if not self._is_one_circuit():
+            raise CircuitBuilderError('Circuit %s is not only one', self._id)
+
+        self._circuit.configure()
+        return self._circuit
+
+    def _is_one_circuit(self):
+        nodes_not_explored = list(self._nodes.keys())
+        nodes_explored = [nodes_not_explored.pop()]
+        nodes_to_explore = nodes_not_explored
+        components_explored = []
+        for node_id in nodes_to_explore:
+            self._explore_circuit(components_explored, node_id, nodes_not_explored, nodes_to_explore)
+        if len(nodes_not_explored) > 0:
+            return False
+        else:
+            return True
+
+    def _explore_circuit(self, components_explored, node_id, nodes_not_explored, nodes_to_explore):
+        node = self.get_node(node_id)
+        components_id = node.get_components_id()
+        for component_id in components_id:
+            if component_id not in components_explored:
+                components_explored.append(component_id)
+                component = self.get_component(component_id)
+                outlet_nodes_id = component.get_outlet_nodes_id().copy()
+                outlet_node_id = outlet_nodes_id.pop()
+                nodes_to_explore += outlet_nodes_id
+                try:
+                    nodes_not_explored.remove(outlet_node_id)
+                    self._explore_circuit(components_explored, outlet_node_id, nodes_not_explored, nodes_to_explore)
+                except ValueError:
+                    pass
+
+    def set_name(self, name):
+        self._name = StrRestricted(name)
+
+    def set_refrigerant_library(self, ref_lib):
+        self._ref_lib = StrRestricted(ref_lib, 'CoolPropHeos')
+
+    def set_refrigerant(self, refrigent):
+        self._refrigerant = StrRestricted(refrigent)
+
+    def add_node(self, component_id_1, component_id_2):
+        next_id = self._id_count.next
+        new_node = nd.NodeBuilder(next_id, component_id_1, component_id_2)
+        self._nodes[next_id] = new_node
+        return new_node
+
+    def add_node(self, node_builder_object):
+        if isinstance(node_builder_object, nd.NodeBuilder):
+            self._id_count.add_forbidden_id(node_builder_object.get_id())
+            self._nodes[node_builder_object.get_id()] = node_builder_object
+
+    def remove_node(self, rm_node):
+        rm_node_id = rm_node.get_id()
+        # Check the node is not use in nodes
+        attached_components = rm_node.get_components_id()
+        for component_id in attached_components:
+            component = self.get_component(component_id)
+            component.remove_node(rm_node_id)
+        # Delete NodeBuilder object
+        del self._components[rm_node_id]
+
+    def get_node(self, node_id):
+        return self._nodes[node_id]
+
+    def add_component(self, component):
+        if isinstance(component, cmp.ComponentBuilder):
+            self._id_count.add_forbidden_id(component.get_id())
+            self._components[component.get_id()] = component
+        else:
+            next_id = self._id_count.next
+            new_component = cmp.ComponentBuilder(component, next_id)
+            self._components[next_id] = new_component
+            return new_component
+
+    def remove_component(self, rm_component):
+        rm_component_id = rm_component.get_id()
+        # Check that the component is not use in nodes
+        attached_nodes = rm_component.get_nodes_id()
+        for node_id in attached_nodes:
+            node = self.get_node(node_id)
+            node.remove_component(rm_component_id)
+        # Delete ComponentBuilder object
+        del self._components[rm_component_id]
+
+    def get_component(self, component_id):
+        return self._components[component_id]

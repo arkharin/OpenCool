@@ -19,7 +19,7 @@ class CalculationError (RuntimeError):
     pass
 
 
-class IdDuplicated(RuntimeError):
+class IdDuplicatedError(RuntimeError):
     pass
 
 
@@ -28,4 +28,20 @@ class TypeComponentError(TypeError):
 
 
 class PropertyNameError(NameError):
+    pass
+
+
+class ComponentBuilderError(RuntimeError):
+    pass
+
+
+class NodeBuilderError(RuntimeError):
+    pass
+
+
+class CircuitBuilderError(RuntimeError):
+    pass
+
+
+class BuildError(RuntimeError):
     pass

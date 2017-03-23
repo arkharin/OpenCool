@@ -7,8 +7,11 @@ Define the abstract class component.
 """
 
 from abc import ABC, abstractmethod
-from scr.logic.common import Element, check_input_str, check_type, check_input_float
-from scr.logic.errors import TypeValueError, PropertyNameError
+from scr.logic.common import check_input_str, check_type, check_input_float
+from scr.logic.restricted_inputs import StrRestricted
+from scr.logic.base_classes import Element
+from scr.logic.errors import TypeValueError, PropertyNameError, BuildError, ComponentBuilderError
+from scr.logic.warnings import ComponentBuilderWarning
 from importlib import import_module
 
 
@@ -41,49 +44,65 @@ class Component(ABC, Element):
     LOWER_LIMIT = 'lower_limit'
     UPPER_LIMIT = 'upper_limit'
 
-    def __init__(self, data, circuit_nodes, n_inlet_nodes, n_outlet_nodes, basic_properties_allowed,
+    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, n_inlet_nodes, n_outlet_nodes, basic_properties_allowed,
                  optional_properties_allowed):
 
-        super().__init__(data[self.NAME], data[self.IDENTIFIER])
+        super().__init__(name, id_)
 
-        check_type(data[self.COMPONENT_TYPE], str)
-        self._component_library = data[self.COMPONENT_TYPE]
-        self._component_type = data[self.COMPONENT_TYPE].rsplit('.')[0]
+        #check_type(data[self.COMPONENT_TYPE], str)
+        self._component_library = component_type
+        self._component_type = component_type.rsplit('.')[0]
 
-        id_inlet_nodes = data[self.INLET_NODES]
-        self._check_input_nodes(id_inlet_nodes, n_inlet_nodes)
-        self._inlet_nodes = {x: circuit_nodes[x] for x in id_inlet_nodes}
+        #id_inlet_nodes = data[self.INLET_NODES]
+        #self._check_input_nodes(inlet_nodes_id, n_inlet_nodes)
+        #self._inlet_nodes = {x: circuit_nodes[x] for x in id_inlet_nodes}
+        self._inlet_nodes = inlet_nodes_id
 
-        id_outlet_nodes = data[self.OUTLET_NODES]
-        self._check_input_nodes(id_outlet_nodes, n_outlet_nodes)
-        self._outlet_nodes = {x: circuit_nodes[x] for x in id_outlet_nodes}
+        #id_outlet_nodes = data[self.OUTLET_NODES]
+        #self._check_input_nodes(id_outlet_nodes, n_outlet_nodes)
+        #self._outlet_nodes = {x: circuit_nodes[x] for x in id_outlet_nodes}
+        self._outlet_nodes = outlet_nodes_id
 
-        self._check_input_properties(data[self.BASIC_PROPERTIES], basic_properties_allowed)
-        self._basic_properties = data[self.BASIC_PROPERTIES]
+        #self._check_input_properties(data[self.BASIC_PROPERTIES], basic_properties_allowed)
+        #self._basic_properties = data[self.BASIC_PROPERTIES]
+        self._basic_properties = {x: component_data[x] for x in basic_properties_allowed if x in component_data}
 
-        self._check_input_properties(data[self.OPTIONAL_PROPERTIES], optional_properties_allowed)
-        self._optional_properties = data[self.OPTIONAL_PROPERTIES]
+        #self._check_input_properties(data[self.OPTIONAL_PROPERTIES], optional_properties_allowed)
+        #self._optional_properties = data[self.OPTIONAL_PROPERTIES]
+        self._optional_properties = {x: component_data[x] for x in optional_properties_allowed if x in component_data}
 
-        self._attach_to_nodes()
+        #self._attach_to_nodes()
 
         self._basic_properties_results = self.NO_INIT
         self._optional_properties_results = self.NO_INIT
 
+    def configure(self, nodes_dict):
+        nodes_id = self._inlet_nodes
+        self._inlet_nodes = {}
+        for node_id in nodes_id:
+            self._inlet_nodes[node_id] = nodes_dict[node_id]
+        nodes_id = self._outlet_nodes
+        self._outlet_nodes = {}
+        for node_id in nodes_id:
+            self._outlet_nodes[node_id] = nodes_dict[node_id]
+
+
+
     @staticmethod
-    def build(component, circuit_nodes):
+    def build(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
         # Dynamic importing modules
-        component_type = component[Component.COMPONENT_TYPE]
+        cmp_type = component_type
         try:
-            cmp = import_module('scr.logic.components.' + component_type)
+            cmp = import_module('scr.logic.components.' + cmp_type)
         except ImportError:
-            print('Error loading component. Type: %s is not found', component_type)
+            print('Error loading component. Type: %s is not found', cmp_type)
             exit(1)
         aux = component_type.rsplit('.')
         class_name = aux.pop()
         # Only capitalize the first letter
         class_name = class_name.replace(class_name[0], class_name[0].upper(), 1)
         class_ = getattr(cmp, class_name)
-        return class_(component, circuit_nodes)
+        return class_(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data)
 
     def _attach_to_nodes(self):
         nodes = self.get_nodes()
@@ -132,12 +151,15 @@ class Component(ABC, Element):
         # Return a dictionary. Keys are de name of properties calculated and items their values.
         results = {}
         for key in properties:
-            results[key] = {self.VALUE: self._calculated_result(key), self.UNIT: self.get_property_unit(properties[key])
+            results[key] = {self.VALUE: self._calculated_result(key), self.UNIT: self.get_property_unit(key)
                             }
         return results
 
     def get_property_unit(self, prop):
-        return prop[self.UNIT]
+        if prop in self.basic_properties_allowed:
+            return self.basic_properties_allowed[prop][self.UNIT]
+        else:
+            return self.optional_properties_allowed[prop][self.UNIT]
 
     def eval_equations(self):
         # Return a matrix of two columns with the calculation result of each side of the equation.
@@ -163,7 +185,7 @@ class Component(ABC, Element):
         return self._basic_properties.keys()
 
     def get_basic_property(self, basic_property):
-        return self._basic_properties[basic_property][self.VALUE]
+        return self._basic_properties[basic_property]
 
     def get_basic_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
@@ -174,7 +196,7 @@ class Component(ABC, Element):
         return self._basic_properties_results
 
     def get_optional_property(self, optional_property):
-        return self._optional_properties[optional_property][self.VALUE]
+        return self._optional_properties[optional_property]
 
     def get_optional_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
@@ -220,7 +242,7 @@ class Component(ABC, Element):
     def get_component_library(self):
         return self._component_library
 
-    def get_save_object(self):
+    def serialize(self):
         save_object = {self.NAME: self.get_name(), self.IDENTIFIER: self.get_id()}
         save_object[self.COMPONENT_TYPE] = self.get_component_library()
         save_object[self.INLET_NODES] = list(self.get_id_inlet_nodes())
@@ -231,3 +253,164 @@ class Component(ABC, Element):
         save_object[self.OPTIONAL_PROPERTIES] = self.get_optional_properties()
         save_object[self.OPTIONAL_PROPERTIES_CALCULATED] = self.get_optional_properties_results()
         return save_object
+
+
+class AComponentSerializer(ABC):
+    NO_INIT = None
+    # Main types
+    COMPRESSOR = 'compressor'
+    EXPANSION_VALVE = 'expansion_valve'
+    CONDENSER = 'condenser'
+    EVAPORATOR = 'evaporator'
+    MIXER_FLOW = 'mix_flow'  # N outlets but only 1 inlet
+    SEPARATOR_FLOW = 'separator_flow'  # Only 1 outlet and N inlets
+    TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
+    OTHER = 'other'
+    # Parameters
+    BASIC_PROPERTIES = 'basic properties'
+    BASIC_PROPERTIES_CALCULATED = 'basic properties calculate'
+    COMPONENTS = 'components'
+    COMPONENT_TYPE = 'type'
+    IDENTIFIER = 'id'
+    INLET_NODES = 'inlet nodes'
+    NAME = 'name'
+    NODES = 'nodes'
+    OPTIONAL_PROPERTIES = 'optional properties'
+    OPTIONAL_PROPERTIES_CALCULATED = 'optional properties calculate'
+    OUTLET_NODES = 'outlet nodes'
+    REFRIGERANT = 'refrigerant'
+    VALUE = 'value'
+    UNIT = 'unit'
+    LOWER_LIMIT = 'lower_limit'
+    UPPER_LIMIT = 'upper_limit'
+
+    def __init__(self):
+        pass
+
+    def deserialize(self, component_file):
+        cmp = ComponentBuilder(component_file[self.IDENTIFIER], component_file[self.COMPONENT_TYPE])
+        cmp.set_name(component_file[self.NAME])
+        i = 0
+        for node_id in component_file[self.INLET_NODES]:
+            cmp.add_inlet_node(i, node_id)
+            i += 1
+        i = 0
+        for node_id in component_file[self.OUTLET_NODES]:
+            cmp.add_outlet_node(i, node_id)
+            i += 1
+        for basic_property in component_file[self.BASIC_PROPERTIES]:
+            cmp.set_attribute(basic_property, component_file[self.BASIC_PROPERTIES][basic_property][self.VALUE])
+        for optional_property in component_file[self.OPTIONAL_PROPERTIES]:
+            cmp.set_attribute(optional_property, component_file[self.OPTIONAL_PROPERTIES][optional_property][self.VALUE])
+
+        return cmp
+
+
+    def serialize(self, component):
+        cmp_serialized = {component.NAME: component.get_name(), component.IDENTIFIER: component.get_id()}
+        cmp_serialized[component.COMPONENT_TYPE] = component.get_component_library()
+        cmp_serialized[component.INLET_NODES] = list(component.get_id_inlet_nodes())
+        cmp_serialized[component.OUTLET_NODES] = list(component.get_outlet_nodes())
+
+        cmp_serialized[component.BASIC_PROPERTIES] = component.get_basic_properties()
+        cmp_serialized[component.BASIC_PROPERTIES_CALCULATED] = component.get_basic_properties_results()
+        cmp_serialized[component.OPTIONAL_PROPERTIES] = component.get_optional_properties()
+        cmp_serialized[component.OPTIONAL_PROPERTIES_CALCULATED] = component.get_optional_properties_results()
+        return cmp_serialized
+
+
+class ComponentBuilder:
+    def __init__(self, id_, component_type):
+        self._name = None
+        self._id = id_
+        self._component_type = StrRestricted(component_type)
+        self._component_data = {}
+
+        # TODO This code is temporal. Components must provide information about the inlet and outlet nodes required.
+        if component_type == Component.SEPARATOR_FLOW:
+            self._inlet_nodes_id = [None] * 1
+            self._outlet_nodes_id = [None] * 2
+        elif component_type == Component.MIXER_FLOW:
+            self._inlet_nodes_id = [None] * 2
+            self._outlet_nodes_id = [None] * 1
+        else:
+            self._inlet_nodes_id = [None] * 1
+            self._outlet_nodes_id = [None] * 1
+
+    def build(self):
+        # Build the component
+        if self._name is None:
+            raise ComponentBuilderWarning('Component %s has no name', self.get_id())
+        # Check that all nodes are connected
+        if None in self._inlet_nodes_id:
+            raise ComponentBuilderError('Missing nodes attached to the inlet of the component %s.', self.get_id())
+
+        if None in self._outlet_nodes_id:
+            raise ComponentBuilderError('Missing nodes attached to the outlet of the component %s.', self.get_id())
+
+        # TODO check the correctness of the data throw component info retrieved with ComponentFactory
+        return Component.build(self._name, self._id, self._component_type.string, self._inlet_nodes_id, self._outlet_nodes_id, self._component_data)
+
+    def set_name(self, name):
+        self._name = StrRestricted(name)
+
+    def get_id(self):
+        return self._id
+
+    def add_inlet_node(self, inlet_pos, node_id):
+        if node_id in self._outlet_nodes_id:
+            self._inlet_nodes_id[inlet_pos] = node_id
+            raise ComponentBuilderWarning('This node is already attached to outlet nodes')
+        elif node_id in self._inlet_nodes_id:
+            raise ComponentBuilderWarning('This node is already attached to inlet nodes')
+        else:
+            self._inlet_nodes_id[inlet_pos] = node_id
+
+    def remove_inlet_node(self, inlet_pos):
+        # Remove node from inlet position
+        self._inlet_nodes_id[inlet_pos] = None
+
+    def add_outlet_node(self, outlet_pos, node_id):
+        if node_id in self._inlet_nodes_id:
+            self._outlet_nodes_id[outlet_pos] = node_id
+            raise ComponentBuilderWarning('This node is already attached to inlet nodes')
+        elif node_id in self._outlet_nodes_id:
+            raise ComponentBuilderWarning('This node is already attached to outlet nodes')
+        else:
+            self._outlet_nodes_id[outlet_pos] = node_id
+
+    def remove_outlet_node(self, outlet_pos):
+        # Remove node from the outlet position
+        self._outlet_nodes_id[outlet_pos] = None
+
+    def get_outlet_nodes_id(self):
+        # Return a list of outlet nodes id attached to component
+        return self._outlet_nodes_id
+
+    def remove_node(self, node_id):
+        # Remove node from component.
+        if node_id in self._inlet_nodes_id:
+            self._inlet_nodes_id.remove(node_id)
+        elif node_id in self._outlet_nodes_id:
+            self._outlet_nodes_id.remove(node_id)
+        else:
+            raise ComponentBuilderWarning('This node is not attached to component')
+
+    def get_nodes_id(self):
+        # Return a list of nodes id attached to component
+        return self._inlet_nodes_id + self._outlet_nodes_id
+
+    def has_node(self, node_id):
+        #TODO revisar si se utiliza
+        return (node_id in self._inlet_nodes_id) or (node_id in self._outlet_nodes_id)
+
+    def set_attribute(self, attribute_name, value):
+        self._component_data[attribute_name] = value
+
+    def remove_attribute(self, attribute_name):
+        if attribute_name in self._component_data:
+            del self._component_data[attribute_name]
+
+class ComponentFactory:
+    # TODO Crear the factory component class
+    pass
