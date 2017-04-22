@@ -104,7 +104,7 @@ class Circuit(Element):
         while True:
             node.set_id_mass_flow(id_mass_flow)
             # This components only have one outlet because is not a flow component.
-            inlet_component = node.get_inlet_components_attached()[0]
+            inlet_component = node.get_inlet_component_attached()
             id_inlet_component = inlet_component.get_id()
             if id_inlet_component in stop_components:
                 break

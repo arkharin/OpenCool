@@ -123,7 +123,6 @@ class Presolver_v01 (PreSolver):
                 node.update_node_values(property_node_type_1, property_1, property_node_type_2, property_2)
                 next_components = node.get_components_attached()
                 for next_component in next_components:
-                    next_component = next_components[next_component]
                     if next_component.get_type() not in stop_components:
                         self._fill_nodes_from_component_to_component(next_component, fill_direction, stop_components, property_node_type_1,
                                                                 property_1, property_node_type_2, property_2)

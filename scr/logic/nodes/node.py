@@ -29,7 +29,8 @@ class Node(ABC, Element):
 
     def __init__(self, name, id_, components_id, refrigerant_object):
         super().__init__(name, id_)
-        self._attach_components = {}
+        self._inlet_component_attached = None
+        self._outlet_component_attached = None
         self._attach_components_id = components_id
         self._refrigerant = refrigerant_object
         self._id_mass_flow = self.NO_INIT
@@ -44,7 +45,11 @@ class Node(ABC, Element):
 
     def configure(self, components_dict):
         for component_id in self._attach_components_id:
-            self._attach_components[component_id] = components_dict[component_id]
+            cmp = components_dict[component_id]
+            if self.get_id() in cmp.get_inlet_nodes():
+                self._inlet_component_attached = components_dict[component_id]
+            else:
+                self._outlet_component_attached = components_dict[component_id]
 
     @staticmethod
     def build(data, refrigerant, ref_lib):
@@ -141,15 +146,15 @@ class Node(ABC, Element):
 
     def get_components_attached(self):
         # Return a list of attached components.
-        return self.get_inlet_components_attached() + self.get_outlet_components_attached()
+        return [self.get_inlet_component_attached(), self.get_outlet_component_attached()]
 
-    def get_inlet_components_attached(self):
+    def get_inlet_component_attached(self):
         # Return a list with all components with this node as inlet node
-        return self._inlet_components_attached
+        return self._inlet_component_attached
 
-    def get_outlet_components_attached(self):
+    def get_outlet_component_attached(self):
         # Return a list with all components with this node as outlet node
-        return self._outlet_components_attached
+        return self._outlet_component_attached
 
     def get_refrigerant(self):
         return self._refrigerant
