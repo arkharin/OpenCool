@@ -115,6 +115,22 @@ class Node(ABC, Element):
         else:
             self._attach_components.append(component)
 
+    def attach_inlet_component(self, component):
+        id_component = component.get_id()
+        if id_component not in self.get_components_attached():
+            self._add_inlet_component(component)
+
+    def _add_inlet_component(self, component):
+        self._inlet_components_attached.append(component)
+
+    def attach_outlet_component(self, component):
+        id_component = component.get_id()
+        if id_component not in self.get_components_attached():
+            self._add_outlet_component(component)
+
+    def _add_outlet_component(self, component):
+        self._outlet_components_attached.append(component)
+
     def calculate_node(self):
         self._pressure = self.pressure()
         self._temperature = self.temperature()
@@ -124,7 +140,16 @@ class Node(ABC, Element):
         self._quality = self.quality()
 
     def get_components_attached(self):
-        return self._attach_components
+        # Return a list of attached components.
+        return self.get_inlet_components_attached() + self.get_outlet_components_attached()
+
+    def get_inlet_components_attached(self):
+        # Return a list with all components with this node as inlet node
+        return self._inlet_components_attached
+
+    def get_outlet_components_attached(self):
+        # Return a list with all components with this node as outlet node
+        return self._outlet_components_attached
 
     def get_refrigerant(self):
         return self._refrigerant

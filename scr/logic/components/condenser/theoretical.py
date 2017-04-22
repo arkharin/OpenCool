@@ -33,7 +33,7 @@ class Theoretical(cmp):
     def _calculated_result(self, key):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_node = list(self.get_id_outlet_nodes())[0]
+        id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
 
         if key == self.HEATING_POWER:
@@ -60,8 +60,8 @@ class Theoretical(cmp):
         else:
             raise PropertyNameError("Invalid property. %s  is not in %s]" % key)
 
-    def _eval_basic_equation(self, basic_property):
-        return [self.get_basic_property(basic_property), self._calculated_result(basic_property)]
+    def _eval_basic_equation(self, key_basic_property):
+        return [self.get_basic_property(key_basic_property), self._calculated_result(key_basic_property)]
 
     def _eval_intrinsic_equations(self):
         return None

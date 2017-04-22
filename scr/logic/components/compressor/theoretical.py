@@ -30,9 +30,9 @@ class Theoretical(cmp):
         super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
     def _calculated_result(self, key):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_node = list(self.get_id_outlet_nodes())[0]
+        id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
 
         if key == self.ISENTROPIC_EFFICIENCY:
@@ -65,8 +65,8 @@ class Theoretical(cmp):
             return PropertyNameError(
                     "Invalid property. %s  is not in %s]" % key)
 
-    def _eval_basic_equation(self, basic_property):
-        return [self.get_basic_property(basic_property), self._calculated_result(basic_property)]
+    def _eval_basic_equation(self, key_basic_property):
+        return [self.get_basic_property(key_basic_property), self._calculated_result(key_basic_property)]
 
     def _eval_intrinsic_equations(self):
         return None
