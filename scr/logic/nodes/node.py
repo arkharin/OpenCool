@@ -44,7 +44,7 @@ class Node(ABC, Element):
         self._temperature = self.NO_INIT
 
     def configure(self, components_dict):
-        for component_id in self._attach_components_id:
+        for component_id in self.get_id_attach_components():
             cmp = components_dict[component_id]
             if self.get_id() in cmp.get_inlet_nodes():
                 self._inlet_component_attached = components_dict[component_id]
@@ -115,18 +115,11 @@ class Node(ABC, Element):
         # Return a list with all components with this node as outlet node
         return self._outlet_component_attached
 
+    def get_id_attach_components(self):
+        return self._attach_components_id
+
     def get_refrigerant(self):
         return self._refrigerant
-
-    def get_properties (self):
-        # Return dict with thermodynamic properties evaluated. Keys are global name of the properties.
-        properties = {'pressure': self.pressure()}
-        properties['temperature'] = self.temperature()
-        properties['enthalpy'] = self.enthalpy()
-        properties['density'] = self.density()
-        properties['entropy'] = self.entropy()
-        properties['quality'] = self.quality()
-        return properties
 
     @abstractmethod
     def get_type_property_base_1(self):
@@ -215,6 +208,7 @@ class ANodeSerializer:
     NAME = 'name'
     IDENTIFIER = 'id'
     COMPONENTS = 'components'
+    UNIT = 'Units'
 
     def __init__(self):
         pass
@@ -224,9 +218,19 @@ class ANodeSerializer:
         node.set_name(node_file[self.NAME])
         return node
 
-    def serialize(self):
-        return {'name': self.get_name(), 'id': self.get_id(), 'Units': 'All units in SI',
-                'Results': self.get_properties()}
+    def serialize(self, node):
+        return {self.NAME: node.get_name(), self.IDENTIFIER: node.get_id(), self.UNIT: 'All units in SI',
+                'Results': self._get_properties(node), self.COMPONENTS: node.get_id_attach_components()}
+
+    def _get_properties(self, node):
+        # Return dict with thermodynamic properties evaluated. Keys are global name of the properties.
+        properties = {'pressure': node.pressure()}
+        properties['temperature'] = node.temperature()
+        properties['enthalpy'] = node.enthalpy()
+        properties['density'] = node.density()
+        properties['entropy'] = node.entropy()
+        properties['quality'] = node.quality()
+        return properties
 
 
 class NodeBuilder:

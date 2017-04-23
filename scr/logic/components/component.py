@@ -197,18 +197,6 @@ class Component(ABC, Element):
     def get_component_library(self):
         return self._component_library
 
-    def serialize(self):
-        save_object = {self.NAME: self.get_name(), self.IDENTIFIER: self.get_id()}
-        save_object[self.COMPONENT_TYPE] = self.get_component_library()
-        save_object[self.INLET_NODES] = self.get_id_inlet_nodes()
-        save_object[self.OUTLET_NODES] = self.get_id_outlet_nodes()
-
-        save_object[self.BASIC_PROPERTIES] = self.get_basic_properties()
-        save_object[self.BASIC_PROPERTIES_CALCULATED] = self.get_basic_properties_results()
-        save_object[self.OPTIONAL_PROPERTIES] = self.get_optional_properties()
-        save_object[self.OPTIONAL_PROPERTIES_CALCULATED] = self.get_optional_properties_results()
-        return save_object
-
 
 class AComponentSerializer(ABC):
     NO_INIT = None
@@ -260,18 +248,22 @@ class AComponentSerializer(ABC):
 
         return cmp
 
-
     def serialize(self, component):
         cmp_serialized = {component.NAME: component.get_name(), component.IDENTIFIER: component.get_id()}
         cmp_serialized[component.COMPONENT_TYPE] = component.get_component_library()
-        cmp_serialized[component.INLET_NODES] = list(component.get_id_inlet_nodes())
-        cmp_serialized[component.OUTLET_NODES] = list(component.get_outlet_nodes())
-
-        cmp_serialized[component.BASIC_PROPERTIES] = component.get_basic_properties()
+        cmp_serialized[component.INLET_NODES] = component.get_id_inlet_nodes()
+        cmp_serialized[component.OUTLET_NODES] = component.get_id_outlet_nodes()
+        self._serialize_properties(cmp_serialized, component, self.BASIC_PROPERTIES, component.get_basic_properties())
         cmp_serialized[component.BASIC_PROPERTIES_CALCULATED] = component.get_basic_properties_results()
-        cmp_serialized[component.OPTIONAL_PROPERTIES] = component.get_optional_properties()
+        self._serialize_properties(cmp_serialized, component, self.OPTIONAL_PROPERTIES,
+                                   component.get_optional_properties())
         cmp_serialized[component.OPTIONAL_PROPERTIES_CALCULATED] = component.get_optional_properties_results()
         return cmp_serialized
+
+    def _serialize_properties(self, cmp_serialized, component, properties_type, properties):
+        cmp_serialized[properties_type] = {}
+        for i in properties:
+            cmp_serialized[properties_type][i] = {self.VALUE: properties[i], self.UNIT: component.get_property_unit(i)}
 
 
 class ComponentBuilder:

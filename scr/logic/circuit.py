@@ -31,7 +31,7 @@ class Circuit(Element):
     def __init__(self, name, id_, refrigerant, refrigerant_library):
         super().__init__(name, id_)
         self._ref_lib = refrigerant_library
-        self._refrigerant = ref.Refrigerant.build(self.get_refregirrant_library(), refrigerant)
+        self._refrigerant = ref.Refrigerant.build(self.get_refrigerant_library(), refrigerant)
         self._nodes = {}
         self._components = {}
         self._mass_flows = []
@@ -225,24 +225,29 @@ class ACircuitSerializer:
         return circuit
 
     def serialize(self, circuit):
-        save_object = {'name': circuit.get_name()}
-        save_object['id'] = circuit.get_id()
+        # Serializer object for node and component
+        nd_serializer = nd.ANodeSerializer()
+        cmp_serializer = cmp.AComponentSerializer()
+
+        # Get circuit serialized
+        circuit_serialized = {'name': circuit.get_name()}
+        circuit_serialized['id'] = circuit.get_id()
 
         refrigerant = circuit.get_refrigerant()
-        save_object['refrigerant'] = refrigerant.name()
-        save_object['refrigerant_library'] = circuit.get_refregirrant_library()
+        circuit_serialized['refrigerant'] = refrigerant.name()
+        circuit_serialized['refrigerant_library'] = circuit.get_refrigerant_library()
 
-        save_object['nodes'] = []
+        circuit_serialized['nodes'] = []
         nodes = circuit.get_nodes()
         for i in nodes:
-            save_object['nodes'].append(nodes[i].serialize())
+            circuit_serialized['nodes'].append(nd_serializer.serialize(nodes[i]))
 
-        save_object['components'] = []
+        circuit_serialized['components'] = []
         components = circuit.get_components()
         for i in components:
-            save_object['components'].append(components[i].serialize())
+            circuit_serialized['components'].append(cmp_serializer.serialize(components[i]))
 
-        return save_object
+        return circuit_serialized
 
 
 class CircuitBuilder:
@@ -272,7 +277,7 @@ class CircuitBuilder:
         for node_id in self._nodes:
             node = self.get_node(node_id)
             try:
-                self._circuit._add_node(node.build(self._circuit.get_refrigerant(), self._circuit.get_refregirrant_library()))
+                self._circuit._add_node(node.build(self._circuit.get_refrigerant(), self._circuit.get_refrigerant_library()))
             except BuildError:
                 raise BuildError
         for component_id in self._components:
