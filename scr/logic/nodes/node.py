@@ -43,13 +43,15 @@ class Node(ABC, Element):
         self._pressure = self.NO_INIT
         self._temperature = self.NO_INIT
 
-    def configure(self, components_dict):
+    def configure(self, components_dict, mass_flows):
         for component_id in self.get_id_attach_components():
             cmp = components_dict[component_id]
             if self.get_id() in cmp.get_inlet_nodes():
                 self._inlet_component_attached = components_dict[component_id]
             else:
                 self._outlet_component_attached = components_dict[component_id]
+        # Add to node the _mass_flows list of the circuit. Later, the specific mass flow will be configured.
+        self._mass_flow = mass_flows
 
     def _init_essential_properties(self, property_type_1, property_1, property_type_2, property_2):
         type_property_base_1 = self.get_type_property_base_1()
@@ -91,9 +93,6 @@ class Node(ABC, Element):
     @abstractmethod
     def _set_value_property_base_2(self, property_type_1, property_1, property_type_2, property_2):
         pass
-
-    def add_mass_flow(self, mass_flows):
-        self._mass_flow = mass_flows
 
     def get_components_attached(self):
         # Return a list of attached components.

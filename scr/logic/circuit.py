@@ -49,7 +49,9 @@ class Circuit(Element):
         self._mass_flows = self._create_mass_flows()
         for node_id in self.get_nodes():
             node = self.get_node(node_id)
-            node.configure(self.get_components())
+            # A list of all mass_flows of te circuit is passes to node. Later, will be configurated which mass flow it
+            # is the correct.
+            node.configure(self.get_components(), self.get_mass_flows())
 
         for component_id in self.get_components():
             component = self.get_component(component_id)
@@ -73,7 +75,7 @@ class Circuit(Element):
             component = self.get_component(id_component)
             id_node = component.get_id_outlet_nodes()[0]
             outlet_node = component.get_outlet_node(id_node)
-            self._fill_id_mass_flow_nodes(id_mass_flow, outlet_node, {id_component:component})
+            self._fill_id_mass_flow_nodes(id_mass_flow, outlet_node, {id_component: component})
         else:
             id_mass_flow = -1
             for id_component in mix_components:
@@ -91,14 +93,6 @@ class Circuit(Element):
                     node = component.get_outlet_node(id_node)
                     id_mass_flow += 1
                     self._fill_id_mass_flow_nodes(id_mass_flow, node, flow_components)
-
-        # Add to nodes _mass_flows list
-        mass_flows = self.get_mass_flows()
-        nodes = self.get_nodes()
-        for id_node in nodes:
-            node = nodes[id_node]
-            node.add_mass_flow(mass_flows)
-        return nodes
 
     def _fill_id_mass_flow_nodes(self, id_mass_flow, node, stop_components):
         while True:
