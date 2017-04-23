@@ -51,21 +51,6 @@ class Node(ABC, Element):
             else:
                 self._outlet_component_attached = components_dict[component_id]
 
-    @staticmethod
-    def build(data, refrigerant, ref_lib):
-        # Dynamic importing modules
-        try:
-            nd = import_module('scr.logic.nodes.' + ref_lib)
-        except ImportError:
-            print('Error loading node library. Type: %s is not found', ref_lib)
-            exit(1)
-        aux = ref_lib.rsplit('.')
-        class_name = aux.pop()
-        # Only capitalize the first letter
-        class_name = class_name.replace(class_name[0], class_name[0].upper(), 1)
-        class_ = getattr(nd, class_name)
-        return class_(data, refrigerant)
-
     def _init_essential_properties(self, property_type_1, property_1, property_type_2, property_2):
         type_property_base_1 = self.get_type_property_base_1()
         type_property_base_2 = self.get_type_property_base_2()
@@ -109,32 +94,6 @@ class Node(ABC, Element):
 
     def add_mass_flow(self, mass_flows):
         self._mass_flow = mass_flows
-
-    def attach_component(self, component):
-        id_component = component.get_id()
-        id_components = []
-        for component in self._attach_components:
-            id_components.append(component.get_id())
-        if id_component in id_components:
-            return
-        else:
-            self._attach_components.append(component)
-
-    def attach_inlet_component(self, component):
-        id_component = component.get_id()
-        if id_component not in self.get_components_attached():
-            self._add_inlet_component(component)
-
-    def _add_inlet_component(self, component):
-        self._inlet_components_attached.append(component)
-
-    def attach_outlet_component(self, component):
-        id_component = component.get_id()
-        if id_component not in self.get_components_attached():
-            self._add_outlet_component(component)
-
-    def _add_outlet_component(self, component):
-        self._outlet_components_attached.append(component)
 
     def calculate_node(self):
         self._pressure = self.pressure()
@@ -250,10 +209,6 @@ class Node(ABC, Element):
         self._set_property(property_type_2, property_2)
 
         self._init_essential_properties(property_type_1, property_1, property_type_2, property_2)
-
-    def serialize(self):
-        return {'name': self.get_name(), 'id': self.get_id(), 'Units': 'All units in SI',
-                'Results': self.get_properties()}
 
 
 class ANodeSerializer:
