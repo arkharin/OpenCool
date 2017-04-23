@@ -105,26 +105,6 @@ class Circuit(Element):
             else:
                 node = inlet_component.get_outlet_node(inlet_component.get_id_outlet_nodes()[0])
 
-    def _load_components(self, input_circuit):
-        components = {}
-        nodes = self.get_nodes()
-        for component in input_circuit[self.COMPONENTS]:
-            identifier = component[self.IDENTIFIER]
-            if identifier in components:
-                raise IdDuplicatedError("There are components duplicated. Identifier %i is duplicated", identifier)
-            components[identifier] = cmp.Component.build(component, nodes)
-        return components
-
-    def _load_nodes(self, input_circuit, ref_lib):
-        nodes = {}
-        refrigerant = self.get_refrigerant()
-        for node in input_circuit[self.NODES]:
-            identifier = node[self.IDENTIFIER]
-            if identifier in nodes:
-                raise IdDuplicatedError("There are nodes duplicated.%i is duplicated", identifier)
-            nodes[identifier] = nd.Node.build(node, refrigerant, ref_lib)
-        return nodes
-
     def _fill_id_mass_flow_inlet_nodes(self, prior_id_mass_flow, prior_prior_id_mass_flow, component,
                                        total_id_mass_flow):
         # TODO  check if prior_id_mass_flow is not affected by the recurrence
