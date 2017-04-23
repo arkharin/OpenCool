@@ -23,7 +23,7 @@ class Theoretical(cmp):
     def __init__(self, data, circuit_nodes):
         super().__init__(data, circuit_nodes, 2, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
-    def _calculated_result(self, key):
+    def calculated_result(self, key):
         id_inlet_nodes = self.get_id_inlet_nodes()
         id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
@@ -44,7 +44,7 @@ class Theoretical(cmp):
             raise PropertyNameError("Invalid property. %s  is not in %s]" % key)
 
     def _eval_basic_equation(self, key_basic_property):
-        return [self.get_basic_property(key_basic_property), self._calculated_result(key_basic_property)]
+        return [self.get_basic_property(key_basic_property), self.calculated_result(key_basic_property)]
 
     def _eval_intrinsic_equations(self):
         id_inlet_nodes = list(self.get_id_inlet_nodes())

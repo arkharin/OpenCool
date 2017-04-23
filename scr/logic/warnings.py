@@ -17,3 +17,7 @@ class NodeBuilderWarning(RuntimeWarning):
 
 class CircuitBuilderWarning(RuntimeWarning):
     pass
+
+
+class ComponentWarning(RuntimeWarning):
+    pass

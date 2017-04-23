@@ -18,7 +18,7 @@ class Theoretical(Component):
     def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
 
-    def _calculated_result(self, key):
+    def calculated_result(self, key):
         return None
 
     def _eval_basic_equation(self, key_basic_property):

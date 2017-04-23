@@ -11,7 +11,7 @@ from scr.logic.common import check_input_str, check_type, check_input_float
 from scr.logic.restricted_inputs import StrRestricted
 from scr.logic.base_classes import Element
 from scr.logic.errors import TypeValueError, PropertyNameError, BuildError, ComponentBuilderError
-from scr.logic.warnings import ComponentBuilderWarning
+from scr.logic.warnings import ComponentBuilderWarning, ComponentWarning
 from importlib import import_module
 
 
@@ -55,8 +55,8 @@ class Component(ABC, Element):
         self._outlet_nodes = outlet_nodes_id
         self._basic_properties = {x: component_data[x] for x in basic_properties_allowed if x in component_data}
         self._optional_properties = {x: component_data[x] for x in optional_properties_allowed if x in component_data}
-        self._basic_properties_results = self.NO_INIT
-        self._optional_properties_results = self.NO_INIT
+        self._basic_properties_results = {}
+        self._optional_properties_results = {}
 
     def configure(self, nodes_dict):
         nodes_id = self._inlet_nodes
@@ -86,24 +86,22 @@ class Component(ABC, Element):
         return class_(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data)
 
     @abstractmethod
-    def _calculated_result(self, key):
-        # Return a list with length 2. In first position the name of the property calculated and in the second de value.
-        # Return None if is empty
+    def calculated_result(self, key):
+        # Calculated the result of the key. Return PropertyNameError if key doesn't exist.
         pass
 
-    def calculated_basic_properties(self):
-        self._basic_properties_results = self._calculate_properties(self.get_basic_properties())
+    def add_property_result(self, key, value):
+        if key in self.basic_properties_allowed:
+            if key in self._basic_properties_results:
+                raise ComponentWarning('%s property is already calculated. Value is overwritten' % key)
+            self._basic_properties_results[key] = self.calculated_result(key)
 
-    def calculated_optional_properties(self):
-        self._optional_properties_results = self._calculate_properties(self.get_optional_properties())
-
-    def _calculate_properties(self, properties):
-        # Return a dictionary. Keys are de name of properties calculated and items their values.
-        results = {}
-        for key in properties:
-            results[key] = {self.VALUE: self._calculated_result(key), self.UNIT: self.get_property_unit(key)
-                            }
-        return results
+        elif key in self.optional_properties_allowed:
+            if key in self._optional_properties_results:
+                raise ComponentWarning('%s property is already calculated. Value is overwritten' % key)
+            self._optional_properties_results[key] = value
+        else:
+            raise ComponentWarning('%s property is not allowed in %s component' % (key, self.get_type()))
 
     def get_property_unit(self, prop):
         if prop in self.basic_properties_allowed:
@@ -254,10 +252,12 @@ class AComponentSerializer(ABC):
         cmp_serialized[component.INLET_NODES] = component.get_id_inlet_nodes()
         cmp_serialized[component.OUTLET_NODES] = component.get_id_outlet_nodes()
         self._serialize_properties(cmp_serialized, component, self.BASIC_PROPERTIES, component.get_basic_properties())
-        cmp_serialized[component.BASIC_PROPERTIES_CALCULATED] = component.get_basic_properties_results()
+        self._serialize_properties(cmp_serialized, component, self.BASIC_PROPERTIES_CALCULATED,
+                                   component.get_basic_properties_results())
         self._serialize_properties(cmp_serialized, component, self.OPTIONAL_PROPERTIES,
                                    component.get_optional_properties())
-        cmp_serialized[component.OPTIONAL_PROPERTIES_CALCULATED] = component.get_optional_properties_results()
+        self._serialize_properties(cmp_serialized, component, self.OPTIONAL_PROPERTIES_CALCULATED,
+                                   component.get_optional_properties_results())
         return cmp_serialized
 
     def _serialize_properties(self, cmp_serialized, component, properties_type, properties):

@@ -95,14 +95,6 @@ class Node(ABC, Element):
     def add_mass_flow(self, mass_flows):
         self._mass_flow = mass_flows
 
-    def calculate_node(self):
-        self._pressure = self.pressure()
-        self._temperature = self.temperature()
-        self._enthalpy = self.enthalpy()
-        self._density = self.density()
-        self._entropy = self.entropy()
-        self._quality = self.quality()
-
     def get_components_attached(self):
         # Return a list of attached components.
         return [self.get_inlet_component_attached(), self.get_outlet_component_attached()]
