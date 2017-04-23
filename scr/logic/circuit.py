@@ -177,7 +177,7 @@ class Circuit(Element):
     def get_refrigerant(self):
         return self._refrigerant
 
-    def get_refregirrant_library(self):
+    def get_refrigerant_library(self):
         return self._ref_lib
 
     def search_components_by_type(self, component_type):
