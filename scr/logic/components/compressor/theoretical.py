@@ -75,7 +75,7 @@ class Theoretical(cmp):
 
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
-        mass_flow = h_out.mass_flow()
+        mass_flow = outlet_node.mass_flow()
         return mass_flow * (h_out - h_in) / 1000.0
 
     ### Auxiliary properties equations ###
