@@ -6,6 +6,8 @@
 Define own restricted or bounded types
 """
 
+#TODO deprehated
+
 from scr.logic.common import check_type
 from scr.logic.errors import TypeValueError, ValuePropertyError
 
@@ -30,7 +32,6 @@ class StrRestricted:
         except TypeValueError:
             raise TypeValueError
 
-    @property
-    def string(self):
+    def get(self):
         return self._value
 

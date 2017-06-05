@@ -7,8 +7,17 @@ Define the Expansion Valve component.
 """
 
 from scr.logic.components.component import Component
+from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
+from scr.helpers.properties import NumericBoundary
+from math import inf
 
 
+def update_saved_data_to_last_version(orig_data, orig_version):
+    # Here will be the code to update to update saved data to current format
+    return orig_data
+
+
+@component(['theoretical_expansion_valve'], 1, update_saved_data_to_last_version)
 class Theoretical(Component):
 
     basic_properties_allowed = {}
@@ -24,6 +33,7 @@ class Theoretical(Component):
     def _eval_basic_equation(self, key_basic_property):
         return None
 
+    @fundamental_property()
     def _eval_intrinsic_equations(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

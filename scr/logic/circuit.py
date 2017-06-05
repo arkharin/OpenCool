@@ -10,7 +10,7 @@ import scr.logic.components.component as cmp
 import scr.logic.nodes.node as nd
 import scr.logic.refrigerants.refrigerant as ref
 from scr.logic.base_classes import Element, Identifier
-from scr.logic.restricted_inputs import StrRestricted
+from scr.helpers.properties import StrRestricted
 from scr.logic.errors import IdDuplicatedError, ValuePropertyError, CircuitBuilderError, BuildError
 from scr.logic.warnings import CircuitBuilderWarning
 
@@ -247,7 +247,7 @@ class CircuitBuilder:
         if self._refrigerant is None:
             raise ValuePropertyError('Refrigerant is not selected')
         # Created circuit object
-        self._circuit = Circuit(self._name, self._id, self._refrigerant.string, self._ref_lib.string)
+        self._circuit = Circuit(self._name, self._id, self._refrigerant.get(), self._ref_lib.get())
         for node_id in self._nodes:
             node = self.get_node(node_id)
             try:

@@ -30,7 +30,7 @@ class Identifier:
 
 class Element:
     def __init__(self, name, identifier):
-        self._name = name.string
+        self._name = name.get()
         check_input_int(identifier, lower_limit=0)
         self._id = identifier
 

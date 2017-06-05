@@ -8,7 +8,7 @@ Define the abstract class node.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
-from scr.logic.restricted_inputs import StrRestricted
+from scr.helpers.properties import StrRestricted
 from scr.logic.base_classes import Element
 from scr.logic.errors import PropertyNameError, NodeBuilderError, BuildError
 from scr.logic.warnings import NodeBuilderWarning
