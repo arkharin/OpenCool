@@ -100,12 +100,12 @@ class Presolver_v01 (PreSolver):
         # TODO Values are hardcoded
         refrigerant = circuit.get_refrigerant()
         for evaporator in evaporators:
-#            te = evaporators[evaporator].get_basic_property(Evaporator.Theoretical.SATURATION_TEMPERATURE)
+#            te = evaporators[evaporator].get_property(Evaporator.Theoretical.SATURATION_TEMPERATURE)
             te = 263.15
         pe = refrigerant.p(refrigerant.TEMPERATURE, te, refrigerant.QUALITY, 1.0)
         tsh = 5.0
         for condenser in condensers:
-            tc = condensers[condenser].get_basic_property(Condenser.Theoretical.SATURATION_TEMPERATURE)
+            tc = condensers[condenser].get_property(Condenser.Theoretical.SATURATION_TEMPERATURE)
         pc = refrigerant.p(refrigerant.TEMPERATURE, tc, refrigerant.QUALITY, 1.0)
         tsc = 2.0
         mass_flow = 0.20

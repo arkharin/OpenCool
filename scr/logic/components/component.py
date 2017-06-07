@@ -143,16 +143,15 @@ class Component(ABC, Element):
         self._component_type = component_type.rsplit('.')[0]
         self._inlet_nodes = inlet_nodes_id
         self._outlet_nodes = outlet_nodes_id
-        # TODO at this moment, is used. Fix in the future
-        self._basic_properties = {x: component_data[x] for x in basic_properties_allowed if x in component_data}
-        self._optional_properties = {x: component_data[x] for x in optional_properties_allowed if x in component_data}
+        self._basic_properties = {}
+        self._auxiliary_properties = {}
         self._basic_properties_results = {}
         self._optional_properties_results = {}
 
-        # Create and register the properties
+        # Create and register the properties and equations. The only use is for register equations functions.
         self._fundamental_eqs = {}
         self._basic_eqs = {}
-        self._extended_eqs = {}
+        self._auxiliary_eqs = {}
 
         # Search those functions in the class that has been decorated with *_property decorator
         # and add equations dictionaries
@@ -170,13 +169,21 @@ class Component(ABC, Element):
                 elif attribute._propery_type == 'basic':
                     self._basic_eqs[property_name] = attribute
                 elif attribute._propery_type == 'extended':
-                    self._extended_eqs[property_name] = attribute
+                    self._auxiliary_eqs[property_name] = attribute
                 else:
                     raise ValueError('_propery_type unknown')
 
-        for property_name, property_vale in component_data.items():
+        for property_name, property_value in component_data.items():
             if hasattr(self, property_name):
-                setattr(self, property_name, property_vale)
+                setattr(self, property_name, property_value)
+                if property_name in self._fundamental_eqs:
+                    continue
+                elif property_name in self._basic_eqs:
+                    self._basic_properties[property_name] = property_value
+                elif property_name in self._auxiliary_eqs:
+                    self._auxiliary_properties[property_name] = property_value
+                else:
+                    raise ValueError('_propery_type unknown')
             else:
                 raise ValueError('Property name unknown')
 
@@ -265,9 +272,6 @@ class Component(ABC, Element):
         # Return a dictview with the names of inputs of properties
         return self._basic_properties.keys()
 
-    def get_basic_property(self, basic_property):
-        return self._basic_properties[basic_property]
-
     def get_basic_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._basic_properties
@@ -276,16 +280,16 @@ class Component(ABC, Element):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._basic_properties_results
 
-    def get_optional_property(self, optional_property):
-        return self._optional_properties[optional_property]
-
     def get_optional_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
-        return self._optional_properties
+        return self._auxiliary_properties
 
     def get_optional_properties_results(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._optional_properties_results
+
+    def get_property(self, key):
+        return getattr(self, key)
 
     def get_type(self):
         return self._component_type

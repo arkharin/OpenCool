@@ -148,20 +148,20 @@ class Theoretical_victor(cmp):
     #     elif key == self.VOLUMETRIC_EFFICIENCY:
     #         mass_flow = inlet_node.mass_flow()
     #         density = inlet_node.density()
-    #         volumetric_efficiency = self.get_optional_property(key)
+    #         volumetric_efficiency = self.get_property(key)
     #         return mass_flow * density / volumetric_efficiency
     #
     #     elif key == self.DISPLACEMENT_VOLUME:
     #         mass_flow = inlet_node.mass_flow()
     #         density = inlet_node.density()
-    #         displacement_volume = self.get_optional_property(key)
+    #         displacement_volume = self.get_property(key)
     #         return mass_flow * density / displacement_volume
     #     else:
     #         return PropertyNameError(
     #             "Invalid property. %s  is not in %s]" % key)
 
     def _eval_basic_equation(self, basic_property):
-        return [self.get_basic_property(basic_property), self.calculated_result(basic_property)]
+        return [self.get_property(basic_property), self.calculated_result(basic_property)]
 
     def _eval_intrinsic_equations(self):
         return None
