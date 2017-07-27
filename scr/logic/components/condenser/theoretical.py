@@ -10,7 +10,7 @@ from scr.logic.common import MAX_FLOAT_VALUE
 from scr.logic.components.component import Component as cmp
 from scr.logic.errors import PropertyNameError
 from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
-from scr.helpers.properties import NumericBoundary
+from scr.helpers.properties import NumericProperty
 from math import inf
 
 
@@ -18,31 +18,22 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     # Here will be the code to update to update saved data to current format
     return orig_data
 
-@component(['theoretical_condenser'], 1, update_saved_data_to_last_version)
+@component('theoretical_condenser', cmp.CONDENSER, 1, update_saved_data_to_last_version)
 class Theoretical(cmp):
     HEATING_POWER = 'heating_power'
     PRESSURE_LOSE = 'pressure_lose'
     SATURATION_TEMPERATURE = 'saturation_temperature'
     SUBCOOLING = 'subcooling'
 
-    basic_properties_allowed = {SATURATION_TEMPERATURE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE,
-                                                         cmp.UNIT: 'K'},
-                                HEATING_POWER: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kW'},
-                                SUBCOOLING: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'K'},
-                                PRESSURE_LOSE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kPa'}
-                                }
-
-    optional_properties_allowed = {}
-
-    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     ### Fundamental properties equations ###
 
     ### Basic properties equations ###
     # Name must be only one word
 
-    @basic_property(heating_power=NumericBoundary(0, inf))
+    @basic_property(heating_power=NumericProperty(0, inf, unit='kW'))
     def _eval_heating_power(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -53,7 +44,7 @@ class Theoretical(cmp):
         mass_flow = outlet_node.mass_flow()
         return mass_flow * (h_in - h_out) / 1000.0
 
-    @basic_property(saturation_temperature=NumericBoundary(0, inf))
+    @basic_property(saturation_temperature=NumericProperty(0, inf, unit='K'))
     def _eval_saturation_temperature(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -62,7 +53,7 @@ class Theoretical(cmp):
         ref = inlet_node.get_refrigerant()
         return ref.T_sat(p_in)
 
-    @basic_property(subcooling=NumericBoundary(0, inf))
+    @basic_property(subcooling=NumericProperty(0, inf, unit='K'))
     def _eval_subcooling(self):
         id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
@@ -72,7 +63,7 @@ class Theoretical(cmp):
         ref = outlet_node.get_refrigerant()
         return ref.T_sat(p_out) - t_out
 
-    @basic_property(pressure_lose=NumericBoundary(0, inf))
+    @basic_property(pressure_lose=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_loss(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

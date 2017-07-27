@@ -11,7 +11,7 @@ from scr.logic.components.component import Component as cmp
 from scr.logic.errors import PropertyNameError
 from scr.logic.refrigerants.refrigerant import Refrigerant
 from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
-from scr.helpers.properties import NumericBoundary
+from scr.helpers.properties import NumericProperty
 from math import inf
 
 
@@ -19,38 +19,27 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     # Here will be the code to update to update saved data to current format
     return orig_data
 
+
 # Template:
-#@component([key name1, key name2,...], version, function to update from old versions)
-@component(['theoretical_compressor', 'isentropic_compressor'], 1, update_saved_data_to_last_version)
+#@component(key name, version, function to update from old versions)
+# key_name is unique
+@component('isentropic_compressor', cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
 class Theoretical(cmp):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'
     POWER_CONSUMPTION = 'power_consumption'
     VOLUMETRIC_EFFICIENCY = 'volumetric_efficiency'
 
-    basic_properties_allowed = {ISENTROPIC_EFFICIENCY:
-                                    {cmp.LOWER_LIMIT: 0.0,
-                                     cmp.UPPER_LIMIT: 1.0,
-                                     cmp.UNIT: ''},
-                                POWER_CONSUMPTION:
-                                    {cmp.LOWER_LIMIT: 0.0,
-                                     cmp.UPPER_LIMIT: MAX_FLOAT_VALUE,
-                                     cmp.UNIT: 'kW'}}
-
-    optional_properties_allowed = {DISPLACEMENT_VOLUME: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE,
-                                                         cmp.UNIT: 'm3/h'},
-                                   VOLUMETRIC_EFFICIENCY: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: 1.0, cmp.UNIT: ''}}
-
-    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1,
-                         self.basic_properties_allowed, self.optional_properties_allowed)
+    # TODO sacar component type, ponerlo en el decorador y en component info.
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     ### Fundamental properties equations ###
 
     ### Basic properties equations ###
     # @basic_property(name of basic property = value type)
     # Name must be only one word
-    @basic_property(isentropic_efficiency=NumericBoundary(0, 1))
+    @basic_property(isentropic_efficiency=NumericProperty(0, 1))
     # function name can be arbitrary
     def _eval_eq_isentropic_effiency(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
@@ -66,7 +55,7 @@ class Theoretical(cmp):
         h_is = ref.h(Refrigerant.PRESSURE, p_out, Refrigerant.ENTROPY, s_in)
         return (h_is - h_in) / (h_out - h_in)
 
-    @basic_property(power_consumption=NumericBoundary(0, 1))
+    @basic_property(power_consumption=NumericProperty(0, 1, unit='kW'))
     def _eval_eq_power_consumption(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -79,7 +68,7 @@ class Theoretical(cmp):
         return mass_flow * (h_out - h_in) / 1000.0
 
     ### Auxiliary properties equations ###
-    @auxiliary_property(displacement_volume=NumericBoundary(0, inf))
+    @auxiliary_property(displacement_volume=NumericProperty(0, inf, unit='m3/h'))
     def _eval_eq_displacement_volume(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -93,7 +82,7 @@ class Theoretical(cmp):
         # and primitive types ;)
         return mass_flow * density / self.displacement_volume
 
-    @auxiliary_property(volumetric_efficiency=NumericBoundary(0, 1))
+    @auxiliary_property(volumetric_efficiency=NumericProperty(0, 1))
     def _eval_eq_volumetric_efficiency(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

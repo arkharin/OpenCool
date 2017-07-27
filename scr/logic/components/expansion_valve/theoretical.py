@@ -6,9 +6,9 @@
 Define the Expansion Valve component.
 """
 
-from scr.logic.components.component import Component
+from scr.logic.components.component import Component as cmp
 from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
-from scr.helpers.properties import NumericBoundary
+from scr.helpers.properties import NumericProperty
 from math import inf
 
 
@@ -17,15 +17,11 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component(['theoretical_expansion_valve'], 1, update_saved_data_to_last_version)
-class Theoretical(Component):
+@component('theoretical_expansion_valve', cmp.EXPANSION_VALVE, 1, update_saved_data_to_last_version)
+class Theoretical(cmp):
 
-    basic_properties_allowed = {}
-
-    optional_properties_allowed = {}
-
-    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     def calculated_result(self, key):
         return None

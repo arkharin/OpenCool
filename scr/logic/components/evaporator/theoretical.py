@@ -10,7 +10,7 @@ from scr.logic.common import MAX_FLOAT_VALUE
 from scr.logic.components.component import Component as cmp
 from scr.logic.errors import PropertyNameError
 from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
-from scr.helpers.properties import NumericBoundary
+from scr.helpers.properties import NumericProperty
 from math import inf
 
 def update_saved_data_to_last_version(orig_data, orig_version):
@@ -18,26 +18,17 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component(['theoretical_evaporator'], 1, update_saved_data_to_last_version)
+@component('theoretical_evaporator', cmp.EVAPORATOR, 1, update_saved_data_to_last_version)
 class Theoretical(cmp):
     COOLING_POWER = 'cooling_power'
     PRESSURE_LOSE = 'pressure_lose'
     SATURATION_TEMPERATURE = 'saturation_temperature'
     SUPERHEATING = 'superheating'
 
-    basic_properties_allowed = {SATURATION_TEMPERATURE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE,
-                                                         cmp.UNIT: 'K'},
-                                COOLING_POWER: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kW'},
-                                SUPERHEATING: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'K'},
-                                PRESSURE_LOSE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kPa'}
-                                }
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
-    optional_properties_allowed = {}
-
-    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
-
-    @basic_property(cooling_power=NumericBoundary(0, inf))
+    @basic_property(cooling_power=NumericProperty(0, inf, unit='kW'))
     def _eval_cooling_power(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -49,7 +40,7 @@ class Theoretical(cmp):
         mass_flow = outlet_node.mass_flow()
         return mass_flow * (h_out - h_in) / 1000.0
 
-    @basic_property(saturation_temperature=NumericBoundary(0, inf))
+    @basic_property(saturation_temperature=NumericProperty(0, inf, unit='K'))
     def _eval_saturation_temperature(self):
         id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
@@ -58,7 +49,7 @@ class Theoretical(cmp):
         ref = outlet_node.get_refrigerant()
         return ref.T_sat(p_out)
 
-    @basic_property(superheating=NumericBoundary(0, inf))
+    @basic_property(superheating=NumericProperty(0, inf, unit='K'))
     def _eval_superheating(self):
         id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
@@ -68,7 +59,7 @@ class Theoretical(cmp):
         ref = outlet_node.get_refrigerant()
         return t_out - ref.T_sat(p_out)
 
-    @basic_property(pressure_lose=NumericBoundary(0, inf))
+    @basic_property(pressure_lose=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

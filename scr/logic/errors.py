@@ -45,3 +45,7 @@ class CircuitBuilderError(RuntimeError):
 
 class BuildError(RuntimeError):
     pass
+
+
+class DeserializerError(RuntimeError):
+    pass

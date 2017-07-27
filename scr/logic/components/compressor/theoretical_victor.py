@@ -12,7 +12,7 @@ from scr.logic.components.component import component, fundamental_property, basi
 from scr.logic.errors import PropertyNameError
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
-from scr.helpers.properties import NumericBoundary
+from scr.helpers.properties import NumericProperty
 
 
 def update_saved_data_to_last_version(orig_data, orig_version):
@@ -20,35 +20,21 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component(['theoretical_compressor', 'key2'], 1, update_saved_data_to_last_version)
+@component('theoretical_compressor', cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
 class Theoretical_victor(cmp):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'
     POWER_CONSUMPTION = 'power_consumption'
     VOLUMETRIC_EFFICIENCY = 'volumetric_efficiency'
 
-    basic_properties_allowed = {ISENTROPIC_EFFICIENCY:
-                                    {cmp.LOWER_LIMIT: 0.0,
-                                     cmp.UPPER_LIMIT: 1.0,
-                                     cmp.UNIT: ''},
-                                POWER_CONSUMPTION:
-                                    {cmp.LOWER_LIMIT: 0.0,
-                                     cmp.UPPER_LIMIT: inf,
-                                     cmp.UNIT: 'kW'}}
-
-    optional_properties_allowed = {DISPLACEMENT_VOLUME: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: inf,
-                                                         cmp.UNIT: 'm3/h'},
-                                   VOLUMETRIC_EFFICIENCY: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: 1.0, cmp.UNIT: ''}}
-
     def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, 1, 1,
-                         self.basic_properties_allowed, self.optional_properties_allowed)
+        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data)
 
     ### Fundamental properties equations ###
 
     ### Basic properties equations ###
     # nombre siguiendo pep8 (solo una palabra)
-    @basic_property(isentropic_efficiency=NumericBoundary(0, 1))
+    @basic_property(isentropic_efficiency=NumericProperty(0, 1))
     def _eval_eq_isentropic_effiency(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -63,7 +49,7 @@ class Theoretical_victor(cmp):
         h_is = ref.h(Refrigerant.PRESSURE, p_out, Refrigerant.ENTROPY, s_in)
         return (h_is - h_in) / (h_out - h_in)
 
-    @basic_property(power_consumption=NumericBoundary(0, 1))
+    @basic_property(power_consumption=NumericProperty(0, 1))
     def _eval_eq_power_consumption(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -76,7 +62,7 @@ class Theoretical_victor(cmp):
         return mass_flow * (h_out - h_in) / 1000.0
 
     ### Extended properties equations ###
-    @auxiliary_property(displacement_volume=NumericBoundary(0, inf))
+    @auxiliary_property(displacement_volume=NumericProperty(0, inf))
     def _eval_eq_displacement_volume(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -90,7 +76,7 @@ class Theoretical_victor(cmp):
         # and primitive types ;)
         return mass_flow * density / self.displacement_volume
 
-    @auxiliary_property(volumetric_efficiency=NumericBoundary(0, 1))
+    @auxiliary_property(volumetric_efficiency=NumericProperty(0, 1))
     def _eval_eq_volumetric_efficiency(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

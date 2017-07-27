@@ -9,7 +9,7 @@ from scr.logic.common import MAX_FLOAT_VALUE
 from scr.logic.components.component import Component as cmp
 from scr.logic.errors import PropertyNameError
 from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
-from scr.helpers.properties import NumericBoundary
+from scr.helpers.properties import NumericProperty
 from math import inf
 
 
@@ -18,21 +18,15 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component(['theoretical_separator_flow'], 1, update_saved_data_to_last_version)
+@component('theoretical_separator_flow', cmp.SEPARATOR_FLOW, 1, update_saved_data_to_last_version)
 class Theoretical(cmp):
     PRESSURE_LOSE_1 = 'pressure lose inlet - outlet 1'
     PRESSURE_LOSE_2 = 'pressure lose inlet - outlet 2'
 
-    basic_properties_allowed = {PRESSURE_LOSE_1: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE,
-                                cmp.UNIT: 'kPa'}, PRESSURE_LOSE_2: {cmp.LOWER_LIMIT: 0.0,
-                                cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kPa'}}
-
-    optional_properties_allowed = {}
-
     def __init__(self, data, circuit_nodes):
-        super().__init__(data, circuit_nodes, 1, 2, self.basic_properties_allowed, self.optional_properties_allowed)
+        super().__init__(data, circuit_nodes)
 
-    @basic_property(pressure_lose_1=NumericBoundary(0, inf))
+    @basic_property(pressure_lose_1=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose_1(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -43,7 +37,7 @@ class Theoretical(cmp):
         p_out = outlet_node_1.pressure()
         return (p_in - p_out) / 1000.0
 
-    @basic_property(pressure_lose_2=NumericBoundary(0, inf))
+    @basic_property(pressure_lose_2=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose_2(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

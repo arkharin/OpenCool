@@ -156,7 +156,7 @@ class Circuit(Element):
 
     def search_components_by_type(self, component_type):
         components = self.get_components()
-        return {x: components[x] for x in components if components[x].get_type() == component_type}
+        return {x: components[x] for x in components if components[x].get_component_info().get_component_type() == component_type}
 
     def update_mass_flows(self, mass_flows):
         # input is list of floats

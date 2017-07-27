@@ -59,7 +59,7 @@ class Presolver_v01 (PreSolver):
     def _fill_nodes(self, from_components, pc, pe, stop_components, tc, te, tsc, tsh):
         for i in from_components:
             component = from_components[i]
-            if component.get_type() == CONDENSER:
+            if component.get_component_info().get_component_type() == CONDENSER:
                 node_property_type_1 = nd.Node.PRESSURE
                 property_1 = pc
                 # TODO Values are hardcoded
@@ -68,7 +68,7 @@ class Presolver_v01 (PreSolver):
                 fill_direction = self.BACKWARD
                 nodes = component.get_inlet_nodes()
 
-            elif component.get_type() == EVAPORATOR:
+            elif component.get_component_info().get_component_type() == EVAPORATOR:
                 node_property_type_1 = nd.Node.PRESSURE
                 property_1 = pe
                 node_property_type_2 = nd.Node.TEMPERATURE
@@ -76,7 +76,7 @@ class Presolver_v01 (PreSolver):
                 fill_direction = self.FORWARD
                 nodes = component.get_outlet_nodes()
 
-            elif component.get_type() == EXPANSION_VALVE:
+            elif component.get_component_info().get_component_type() == EXPANSION_VALVE:
                 node_property_type_1 = nd.Node.PRESSURE
                 property_1 = pc
                 node_property_type_2 = nd.Node.TEMPERATURE
@@ -123,6 +123,6 @@ class Presolver_v01 (PreSolver):
                 node.update_node_values(property_node_type_1, property_1, property_node_type_2, property_2)
                 next_components = node.get_components_attached()
                 for next_component in next_components:
-                    if next_component.get_type() not in stop_components:
+                    if next_component.get_component_info().get_component_type() not in stop_components:
                         self._fill_nodes_from_component_to_component(next_component, fill_direction, stop_components, property_node_type_1,
                                                                 property_1, property_node_type_2, property_2)

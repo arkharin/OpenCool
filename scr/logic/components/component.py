@@ -12,7 +12,7 @@ from collections import namedtuple
 
 from scr.helpers.properties import StrRestricted
 from scr.logic.base_classes import Element
-from scr.logic.errors import TypeValueError, PropertyNameError, BuildError, ComponentBuilderError
+from scr.logic.errors import TypeValueError, PropertyNameError, BuildError, ComponentBuilderError, DeserializerError
 from scr.logic.warnings import ComponentBuilderWarning, ComponentWarning
 from importlib import import_module
 from scr.helpers.singleton import Singleton
@@ -28,7 +28,7 @@ from scr.helpers.singleton import Singleton
 # variables and are share between instances
 
 
-def component(keys, version=1, updater_data_func=None):
+def component(key, component_type, version=1, updater_data_func=None):
     def real_decorator(cls):
         """ updater_data_func is only required if version is bigger than 1"""
         if not issubclass(cls, Component):
@@ -37,7 +37,7 @@ def component(keys, version=1, updater_data_func=None):
         if version != 1 and updater_data_func == None:
             raise ValueError('updater_func must be distinct to None if version is not one')
 
-        cmp_info = ComponentInfo(cls, component_version=version, updater_data_func=updater_data_func)
+        cmp_info = ComponentInfo(key, cls, component_type, component_version=version, updater_data_func=updater_data_func)
 
         # Search those functions in the class that has been decorated with *_property decorator and add info in
         # to component info
@@ -52,8 +52,8 @@ def component(keys, version=1, updater_data_func=None):
                 else:
                     raise ValueError('_propery_type unknown')
 
-        ComponentInfoFactory().add(cmp_info, keys)
-        ComponentFactory().add(cls, keys)
+        ComponentInfoFactory().add(cmp_info)
+        ComponentFactory().add(key, cls)
 
         return cls
     return real_decorator
@@ -107,6 +107,7 @@ class Component(ABC, Element):
     # Arbritary value to check used to check if super method is called in _register_xxx_property_eq() methods
     # FIXME search better name
     NO_INIT = None
+    # TODO pasar a component info
     # Main types
     COMPRESSOR = 'compressor'
     EXPANSION_VALVE = 'expansion_valve'
@@ -116,31 +117,11 @@ class Component(ABC, Element):
     SEPARATOR_FLOW = 'separator_flow'  # Only 1 outlet and N inlets
     TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
     OTHER = 'other'
-    # Parameters
-    BASIC_PROPERTIES = 'basic properties'
-    BASIC_PROPERTIES_CALCULATED = 'basic properties calculate'
-    COMPONENTS = 'components'
-    COMPONENT_TYPE = 'type'
-    IDENTIFIER = 'id'
-    INLET_NODES = 'inlet nodes'
-    NAME = 'name'
-    NODES = 'nodes'
-    OPTIONAL_PROPERTIES = 'optional properties'
-    OPTIONAL_PROPERTIES_CALCULATED = 'optional properties calculate'
-    OUTLET_NODES = 'outlet nodes'
-    REFRIGERANT = 'refrigerant'
-    VALUE = 'value'
-    UNIT = 'unit'
-    LOWER_LIMIT = 'lower_limit'
-    UPPER_LIMIT = 'upper_limit'
 
-    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data, n_inlet_nodes, n_outlet_nodes, basic_properties_allowed,
-                 optional_properties_allowed):
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
 
         super().__init__(name, id_)
 
-        self._component_library = component_type
-        self._component_type = component_type.rsplit('.')[0]
         self._inlet_nodes = inlet_nodes_id
         self._outlet_nodes = outlet_nodes_id
         self._basic_properties = {}
@@ -225,25 +206,17 @@ class Component(ABC, Element):
         pass
 
     def add_property_result(self, key, value):
-        if key in self.basic_properties_allowed:
+        if key in self.get_basic_properties():
             if key in self._basic_properties_results:
                 raise ComponentWarning('%s property is already calculated. Value is overwritten' % key)
             self._basic_properties_results[key] = self.calculated_result(key)
 
-        elif key in self.optional_properties_allowed:
+        elif key in self.get_optional_properties():
             if key in self._optional_properties_results:
                 raise ComponentWarning('%s property is already calculated. Value is overwritten' % key)
             self._optional_properties_results[key] = value
         else:
-            raise ComponentWarning('%s property is not allowed in %s component' % (key, self.get_type()))
-
-    def get_property_unit(self, prop):
-        # TODO future, information will the save in the component. Remove this method.
-
-        if prop in self.basic_properties_allowed:
-            return self.basic_properties_allowed[prop][self.UNIT]
-        else:
-            return self.optional_properties_allowed[prop][self.UNIT]
+            raise ComponentWarning('%s property is not allowed in %s component' % (key, self.get_component_info().get_component_type()))
 
     def eval_equations(self):
         # Return a matrix of two columns with the calculation result of each side of the equation.
@@ -292,7 +265,8 @@ class Component(ABC, Element):
         return getattr(self, key)
 
     def get_type(self):
-        return self._component_type
+        # TODO where will be use?
+        return
 
     def get_inlet_nodes(self):
         """
@@ -325,21 +299,11 @@ class Component(ABC, Element):
         # Return a list of all outlet nodes of the component
         return list(self.get_outlet_nodes().keys())
 
-    def get_component_library(self):
-        return self._component_library
+    def get_component_info(self):
+        return ComponentInfoFactory().get(self)
 
 
 class AComponentSerializer(ABC):
-    NO_INIT = None
-    # Main types
-    COMPRESSOR = 'compressor'
-    EXPANSION_VALVE = 'expansion_valve'
-    CONDENSER = 'condenser'
-    EVAPORATOR = 'evaporator'
-    MIXER_FLOW = 'mix_flow'  # N outlets but only 1 inlet
-    SEPARATOR_FLOW = 'separator_flow'  # Only 1 outlet and N inlets
-    TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
-    OTHER = 'other'
     # Parameters
     BASIC_PROPERTIES = 'basic properties'
     BASIC_PROPERTIES_CALCULATED = 'basic properties calculate'
@@ -352,51 +316,58 @@ class AComponentSerializer(ABC):
     OPTIONAL_PROPERTIES = 'optional properties'
     OPTIONAL_PROPERTIES_CALCULATED = 'optional properties calculate'
     OUTLET_NODES = 'outlet nodes'
-    REFRIGERANT = 'refrigerant'
-    VALUE = 'value'
-    UNIT = 'unit'
-    LOWER_LIMIT = 'lower_limit'
-    UPPER_LIMIT = 'upper_limit'
+    VERSION = 'version'
 
     def __init__(self):
         pass
 
     def deserialize(self, component_file):
-        cmp = ComponentBuilder(component_file[self.IDENTIFIER], component_file[self.COMPONENT_TYPE])
-        cmp.set_name(component_file[self.NAME])
+        cmp_data = component_file
+        cmp = ComponentBuilder(cmp_data[self.IDENTIFIER], cmp_data[self.COMPONENT_TYPE])
+        cmp_version = cmp_data[self.VERSION]
+        cmp_info = ComponentInfoFactory().get(cmp.get_component_type())
+        component_version = cmp_info.get_version()
+        if cmp_version < component_version:
+            cmp_data = cmp_info.get_updater_data_func(cmp_data, cmp_version)
+        elif cmp_version > component_version:
+            raise DeserializerError('The version of component ' + self.IDENTIFIER +
+                                    ' is greater than component in library. Version ' + str(cmp_version) + ' vs ' +
+                                    str(component_version))
+        cmp.set_name(cmp_data[self.NAME])
         i = 0
-        for node_id in component_file[self.INLET_NODES]:
+        for node_id in cmp_data[self.INLET_NODES]:
             cmp.add_inlet_node(i, node_id)
             i += 1
         i = 0
-        for node_id in component_file[self.OUTLET_NODES]:
+        for node_id in cmp_data[self.OUTLET_NODES]:
             cmp.add_outlet_node(i, node_id)
             i += 1
-        for basic_property in component_file[self.BASIC_PROPERTIES]:
-            cmp.set_attribute(basic_property, component_file[self.BASIC_PROPERTIES][basic_property][self.VALUE])
-        for optional_property in component_file[self.OPTIONAL_PROPERTIES]:
-            cmp.set_attribute(optional_property, component_file[self.OPTIONAL_PROPERTIES][optional_property][self.VALUE])
+        for basic_property in cmp_data[self.BASIC_PROPERTIES]:
+            cmp.set_attribute(basic_property, cmp_data[self.BASIC_PROPERTIES][basic_property])
+        for optional_property in cmp_data[self.OPTIONAL_PROPERTIES]:
+            cmp.set_attribute(optional_property, cmp_data[self.OPTIONAL_PROPERTIES][optional_property])
 
         return cmp
 
     def serialize(self, component):
-        cmp_serialized = {component.NAME: component.get_name(), component.IDENTIFIER: component.get_id()}
-        cmp_serialized[component.COMPONENT_TYPE] = component.get_component_library()
-        cmp_serialized[component.INLET_NODES] = component.get_id_inlet_nodes()
-        cmp_serialized[component.OUTLET_NODES] = component.get_id_outlet_nodes()
-        self._serialize_properties(cmp_serialized, component, self.BASIC_PROPERTIES, component.get_basic_properties())
-        self._serialize_properties(cmp_serialized, component, self.BASIC_PROPERTIES_CALCULATED,
+        cmp_serialized = {self.NAME: component.get_name(), self.IDENTIFIER: component.get_id()}
+        cmp_serialized[self.VERSION] = component.get_component_info().get_version()
+        cmp_serialized[self.COMPONENT_TYPE] = component.get_component_info().get_component_key()
+        cmp_serialized[self.INLET_NODES] = component.get_id_inlet_nodes()
+        cmp_serialized[self.OUTLET_NODES] = component.get_id_outlet_nodes()
+        self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES, component.get_basic_properties())
+        self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES_CALCULATED,
                                    component.get_basic_properties_results())
-        self._serialize_properties(cmp_serialized, component, self.OPTIONAL_PROPERTIES,
+        self._serialize_properties(cmp_serialized, self.OPTIONAL_PROPERTIES,
                                    component.get_optional_properties())
-        self._serialize_properties(cmp_serialized, component, self.OPTIONAL_PROPERTIES_CALCULATED,
+        self._serialize_properties(cmp_serialized, self.OPTIONAL_PROPERTIES_CALCULATED,
                                    component.get_optional_properties_results())
         return cmp_serialized
 
-    def _serialize_properties(self, cmp_serialized, component, properties_type, properties):
+    def _serialize_properties(self, cmp_serialized, properties_type, properties):
         cmp_serialized[properties_type] = {}
         for i in properties:
-            cmp_serialized[properties_type][i] = {self.VALUE: properties[i], self.UNIT: component.get_property_unit(i)}
+            cmp_serialized[properties_type][i] = properties[i]
 
 
 class ComponentBuilder:
@@ -429,7 +400,7 @@ class ComponentBuilder:
             raise ComponentBuilderError('Missing nodes attached to the outlet of the component %s.', self.get_id())
 
         # TODO check the correctness of the data throw component info retrieved with ComponentFactory
-        return Component.build(self._name, self._id, self._component_type.get(), self._inlet_nodes_id, self._outlet_nodes_id, self._component_data)
+        return ComponentFactory().create(self.get_component_type(), self._name, self._id, self._inlet_nodes_id, self._outlet_nodes_id, self._component_data)
 
     def set_name(self, name):
         self._name = StrRestricted(name)
@@ -438,6 +409,9 @@ class ComponentBuilder:
         return self._id
 
     def add_inlet_node(self, inlet_pos, node_id):
+        if inlet_pos >= len(self._inlet_nodes_id):
+            raise ComponentBuilderError('Component with id ' + self.get_id() + ' has only ' +
+                                        str(len(self._inlet_nodes_id)) + ' inlet nodes')
         if node_id in self._outlet_nodes_id:
             self._inlet_nodes_id[inlet_pos] = node_id
             raise ComponentBuilderWarning('This node is already attached to outlet nodes')
@@ -451,10 +425,14 @@ class ComponentBuilder:
         self._inlet_nodes_id[inlet_pos] = None
 
     def add_outlet_node(self, outlet_pos, node_id):
+        if outlet_pos >= len(self._outlet_nodes_id):
+            raise ComponentBuilderError('Component with id ' + self.get_id() + ' has only ' +
+                                        str(len(self._outlet_nodes_id)) + ' outlet nodes')
         if node_id in self._inlet_nodes_id:
             self._outlet_nodes_id[outlet_pos] = node_id
             raise ComponentBuilderWarning('This node is already attached to inlet nodes')
         elif node_id in self._outlet_nodes_id:
+
             raise ComponentBuilderWarning('This node is already attached to outlet nodes')
         else:
             self._outlet_nodes_id[outlet_pos] = node_id
@@ -491,41 +469,47 @@ class ComponentBuilder:
         if attribute_name in self._component_data:
             del self._component_data[attribute_name]
 
+    def get_component_type(self):
+        return self._component_type.get()
 
 class ComponentFactory(metaclass=Singleton):
     def __init__(self):
         self._components = {}
 
-    def add(self, component_class, keys=None):
-        """ Allows to specify more keys than component class name to retrieve the info"""
-        if component_class in self._components:
-            raise ValueError('Class %s has already been registered in ', component_class, self.__class__)
+    def add(self, key, component_class):
+        """ Allows to specify more keys than component class type to retrieve the info"""
+        if key in self._components:
+            # Check if we are wanting to register the same class. If it is the case, we don't raise an error due to
+            # duplicated key.
+            mod_spec = inspect.getmodule(component_class).__spec__
+            if not mod_spec.has_location:
+                raise ValueError('The module of the class ' + key + 'has not location')
 
-        self._components[component_class] = component_class
+            keyed_cls = self._components[key]
 
-        if keys is not None:
-            try:
-                for key in keys:
-                    if key in self._components:
-                        raise ValueError('key' + str(key) + ' has already been registered in ' + str(type(self)))
-                    self._components[key] = component_class
-            except TypeError:
-                # There are only a key
-                if keys in self._components:
-                    raise ValueError('key' + str(keys) + ' has already been registered in ' + str(type(self)))
-                self._components[keys] = component_class
+            if not (mod_spec.origin == inspect.getmodule(
+                    keyed_cls).__spec__.origin and component_class.__name__ == keyed_cls.__name__):
+                raise ValueError('key' + str(key) + ' has already been registered in ' + str(type(self)))
+        else:
+            if component_class in self._components:
+                raise ValueError('Class %s has already been registered in ', component_class, self.__class__)
+            self._components[component_class] = component_class
+            self._components[key] = component_class
 
-    def create(self, key, info):
+    def create(self, key, *args):
 
         if key not in self._components:
             raise ValueError('key' + str(key) + ' doesn\'t is not a registered key in ' + str(type(self)))
 
-        return self._components[key](info)
+        return self._components[key](*args)
 
 
 class ComponentInfo:
-    def __init__(self, component_class, component_version=1, updater_data_func=None):
+    def __init__(self, component_key, component_class, component_type, component_version=1, updater_data_func=None):
+        self._component_key = component_key
+        # FIXME make attribute private
         self.component_class = component_class
+        self._component_type = component_type
         self._parent_component_class = inspect.getmro(component_class)[1]  # Parent class
         self._component_version = component_version
         self.updater_data_func = updater_data_func
@@ -579,30 +563,38 @@ class ComponentInfo:
     def get_component_class(self):
         return self.component_class
 
+    def get_component_key(self):
+        return self._component_key
+
+    def get_component_type(self):
+        return self._component_type
+
 
 class ComponentInfoFactory(metaclass=Singleton):
     def __init__(self):
         self._components_info = {}
 
-    def add(self, component_info, keys=None):
+    def add(self, component_info):
         """ Allows to specify more keys than component class type to retrieve the info"""
         component_class = component_info.get_component_class()
-        if component_class in self._components_info:
-            raise ValueError('Class %s has already been registered in ', component_class, self.__class__)
+        key = component_info.get_component_key()
+        if key in self._components_info:
+            # Check if we are wanting to register the same class. If it is the case, we don't raise an error due to
+            # duplicated key.
+            mod_spec = inspect.getmodule(component_class).__spec__
+            if not mod_spec.has_location:
+                raise ValueError('The module of the class ' + key + 'has not location')
 
-        self._components_info[component_class] = component_info
+            keyed_cls = self.get(key).get_component_class()
 
-        if keys is not None:
-            try:
-                for key in keys:
-                    if key in self._components_info:
-                        raise ValueError('key' + str(key) + ' has already been registered in ' + str(type(self)))
-                    self._components_info[key] = component_info
-            except TypeError:
-                # There is only one key and it isn't iterable
-                if keys in self._components_info:
-                    raise ValueError('key' + str(keys) + ' has already been registered in ' + str(type(self)))
-                self._components_info[keys] = component_info
+            if not (mod_spec.origin == inspect.getmodule(keyed_cls).__spec__.origin and component_class.__name__ == keyed_cls.__name__):
+                raise ValueError('key' + str(key) + ' has already been registered in ' + str(type(self)))
+        else:
+            if component_class in self._components_info:
+                raise ValueError('Class %s has already been registered in ', component_class, self.__class__)
+            self._components_info[component_class] = component_info
+            self._components_info[key] = component_info
+
 
     def get(self, key):
         """
@@ -615,6 +607,6 @@ class ComponentInfoFactory(metaclass=Singleton):
         if key in self._components_info:
             return self._components_info[key]
         else:
-            raise ValueError('key' + str(key) + ' doesn\'t is not a registered key in ' + str(type(self)))
+            raise ValueError('key ' + str(key) + ' is not a registered key in ' + str(type(self)))
 
             # TODO def get_register_components()

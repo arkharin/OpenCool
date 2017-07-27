@@ -38,19 +38,23 @@ class Property(ABC):
         return self._value
 
 
-class NumericBoundary(Property):
+class NumericProperty(Property):
 
-    def __init__(self, lower_boundary=-inf, upper_boundary=inf, value=None):
+    def __init__(self, lower_boundary=-inf, upper_boundary=inf, value=None, unit=None):
         super().__init__()
         self._lower_boundary = lower_boundary
         self._upper_boundary = upper_boundary
         self.set(value)
+        self._unit = unit
 
     def is_correct(self, value):
         if self._value is not None:
             return self._lower_boundary < value < self._upper_boundary
         else:
             return True
+
+    def get_unit(self):
+        return self._unit
 
 
 class StrRestricted(Property):
