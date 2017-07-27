@@ -9,9 +9,7 @@ Define own restricted or bounded types
 from abc import ABC, abstractmethod
 from math import inf
 from scr.logic.common import check_type
-from scr.logic.errors import TypeValueError, ValuePropertyError
-
-# FIXME los métodos de set deberían lanzar un warning de porque no se ha podido guardar el valor
+from scr.logic.errors import TypeValueError, PropertyValueError
 
 
 class Property(ABC):
@@ -24,14 +22,12 @@ class Property(ABC):
         pass
 
     def set(self, value):
-        """Try to set the value. 
-        
-        Return true if the setted value is correct y is setted.
-        Return false if the value is incorrect and wasn't saved"""
+        # Try to set a arbitrary value.
         if self.is_correct(value):
             self._value = value
-            return True
-        return False
+        else:
+            raise PropertyValueError("%s Value not allowable." % value)
+    pass
 
     def get(self):
         """Return the saved value."""
