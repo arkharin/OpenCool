@@ -11,8 +11,8 @@ from scr.logic.nodes.node import Node
 
 class CoolPropHeos(Node):
 
-    def __init__(self, data, refrigerant):
-        super().__init__(data, refrigerant)
+    def __init__(self, name, id_, components_id, refrigerant_object):
+        super().__init__(name, id_, components_id, refrigerant_object)
 
     def get_type_property_base_1(self):
         return self.TEMPERATURE

@@ -6,31 +6,37 @@
 Define the Expansion Valve component.
 """
 
-from scr.logic.components.component import Component
+from scr.logic.components.component import Component as cmp
+from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
+from scr.helpers.properties import NumericProperty
+from math import inf
 
 
-class Theoretical(Component):
+def update_saved_data_to_last_version(orig_data, orig_version):
+    # Here will be the code to update to update saved data to current format
+    return orig_data
 
-    basic_properties_allowed = {}
 
-    optional_properties_allowed = {}
+@component('theoretical_expansion_valve', cmp.EXPANSION_VALVE, 1, update_saved_data_to_last_version)
+class Theoretical(cmp):
 
-    def __init__(self, data, circuit_nodes):
-        super().__init__(data, circuit_nodes, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
-    def _calculated_result(self, key):
-            return None
-
-    def _eval_basic_equation(self, basic_property):
+    def calculated_result(self, key):
         return None
 
+    def _eval_basic_equation(self, key_basic_property):
+        return None
+
+    @fundamental_property()
     def _eval_intrinsic_equations(self):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_node = list(self.get_id_outlet_nodes())[0]
+        id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
 
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
 
-        return [h_in / 1000.0, h_out / 1000.0]
+        return [[h_in / 1000.0, h_out / 1000.0]]

@@ -5,6 +5,39 @@
 import scr.logic.circuit as circ
 from scr.logic.solvers.solver import Solver
 from scr.model.model import load, save
+from importlib import import_module
+import scr.logic.components.component as cmp2
+import os, sys
+from pathlib import Path
+
+
+def _load_plugins_from_directory(dir_, use_working_directory_as_reference=True):
+    base_dir = Path(dir_)
+    if not base_dir.is_dir():
+        raise ValueError
+    cwd = Path(os.getcwd()) if use_working_directory_as_reference else base_dir
+
+    for module_path in list(base_dir.glob('**/*.py')):
+        print(module_path)
+        # Avoid importing __init__.py
+        if module_path.name != '__init__.py' and not module_path.match(cmp2.__file__):
+            print(module_path)
+            module_name = module_path.relative_to(cwd)
+            module_name = module_name.with_suffix("")
+            module_name= str(module_name)
+            module_name = module_name.replace(os.sep, '.')
+            import_module(module_name)
+
+# Load core plugins
+core_plugins_directory = 'logic/components'
+_load_plugins_from_directory(Path(os.getcwd()) / Path(core_plugins_directory))
+
+# Non-core plugins directory can be loaded too
+plugins_directory = None  # '/foo/bar/'
+if plugins_directory is not None:
+    # Add plugins directory to sys path
+    sys.path.insert(0, plugins_directory)
+    _load_plugins_from_directory(plugins_directory, use_working_directory_as_reference=False)
 
 input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refrigerant_library': 'CoolPropHeos',
                  'nodes': [{'name': 'n1', 'id': 1}, {'name': 'n2', 'id': 2}, {'name': 'n3', 'id': 3},{'name': 'n4', 'id': 4}],
@@ -25,9 +58,14 @@ input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refriger
                                 ]}
 
 #save(input_circuit, 'input_circuit', 'OpenCool circuits')
-load_circuit = load('circuit_solved', 'OpenCool circuits')
-circuit = circ.Circuit(load_circuit)
+#load_circuit = load('input_circuit builder_victor', 'OpenCool circuits')
+#load_circuit = load('input_circuit builder', 'OpenCool circuits')
 
+load_circuit = load('circuit_solved builder v2', 'OpenCool circuits')
+ser = circ.ACircuitSerializer()
+circuit = ser.deserialize(load_circuit)
+print("circuit deserilize succesfully")
+circuit = circuit.build()
 presolver = 'presolver_v01'
 solver = 'simple_circuit_solver'
 postsolver = 'postsolver_v01'
@@ -44,8 +82,8 @@ print(error)
 print()
 print('The circuit solve is:\n')
 print(circuit_solved)
-save_circuit = circuit_solved.get_save_object()
-save(save_circuit, 'circuit_solved', 'OpenCool circuits')
+save_circuit = ser.serialize(circuit_solved)
+save(save_circuit, 'circuit_solved builder', 'OpenCool circuits')
 
 print('end')
 

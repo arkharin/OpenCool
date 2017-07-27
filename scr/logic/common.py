@@ -7,6 +7,7 @@ Common objects and functions used
 """
 
 from sys import float_info, maxsize
+
 from scr.logic.errors import TypeValueError, ValuePropertyError
 
 # Maximum and minimum values of the system
@@ -14,20 +15,6 @@ MAX_INT_VALUE = maxsize
 MIN_INT_VALUE = -maxsize
 MAX_FLOAT_VALUE = float_info.max
 MIN_FLOAT_VALUE = float_info.min
-
-
-class GeneralData:
-    def __init__(self, name, identifier):
-        check_type(name, str)
-        self._name = name
-        check_input_int(identifier, lower_limit=0)
-        self._id = identifier
-
-    def get_name(self):
-        return self._name
-
-    def get_id(self):
-        return self._id
 
 
 def check_input_float(value, lower_limit=MIN_FLOAT_VALUE, upper_limit=MAX_FLOAT_VALUE):

@@ -27,7 +27,6 @@ class Simple_circuit_solver(Solver_algorithm):
     def solve(self, circuit, initial_conditions, **kwargs):
         ndarray_initial_conditions = np.array(initial_conditions)
         self._solution = root(self._get_equations_error, ndarray_initial_conditions, args=circuit)
-        self._calculate_nodes_solved(circuit)
         return circuit
 
     def _get_equations_error(self, x, circuit):
@@ -45,14 +44,6 @@ class Simple_circuit_solver(Solver_algorithm):
             for equation_result in equations_results:
                 error.append(equation_result[0] - equation_result[1])
         return error
-
-    def _calculate_nodes_solved(self, circuit):
-        nodes = circuit.get_nodes()
-        for node in nodes:
-            node = nodes[node]
-            node.update_node_values(node.get_type_property_base_1(), node.get_value_property_base_1(),
-                                    node.get_type_property_base_2(), node.get_value_property_base_2())
-            node.calculate_node()
 
     def get_solution_error(self):
         return self._solution['fun']

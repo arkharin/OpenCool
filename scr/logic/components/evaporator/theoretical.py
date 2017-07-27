@@ -9,58 +9,86 @@ Define the Evaporator component.
 from scr.logic.common import MAX_FLOAT_VALUE
 from scr.logic.components.component import Component as cmp
 from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
+from scr.helpers.properties import NumericProperty
+from math import inf
+
+def update_saved_data_to_last_version(orig_data, orig_version):
+    # Here will be the code to update to update saved data to current format
+    return orig_data
 
 
+@component('theoretical_evaporator', cmp.EVAPORATOR, 1, update_saved_data_to_last_version)
 class Theoretical(cmp):
     COOLING_POWER = 'cooling_power'
     PRESSURE_LOSE = 'pressure_lose'
     SATURATION_TEMPERATURE = 'saturation_temperature'
     SUPERHEATING = 'superheating'
 
-    basic_properties_allowed = {SATURATION_TEMPERATURE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE,
-                                                         cmp.UNIT: 'K'},
-                                COOLING_POWER: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kW'},
-                                SUPERHEATING: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'K'},
-                                PRESSURE_LOSE: {cmp.LOWER_LIMIT: 0.0, cmp.UPPER_LIMIT: MAX_FLOAT_VALUE, cmp.UNIT: 'kPa'}
-                                }
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
-    optional_properties_allowed = {}
-
-    def __init__(self, data, circuit_nodes):
-        super().__init__(data, circuit_nodes, 1, 1, self.basic_properties_allowed, self.optional_properties_allowed)
-
-    def _calculated_result(self, key):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+    @basic_property(cooling_power=NumericProperty(0, inf, unit='kW'))
+    def _eval_cooling_power(self):
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_node = list(self.get_id_outlet_nodes())[0]
+        id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
 
+        h_in = inlet_node.enthalpy()
+        h_out = outlet_node.enthalpy()
+        mass_flow = outlet_node.mass_flow()
+        return mass_flow * (h_out - h_in) / 1000.0
+
+    @basic_property(saturation_temperature=NumericProperty(0, inf, unit='K'))
+    def _eval_saturation_temperature(self):
+        id_outlet_node = self.get_id_outlet_nodes()[0]
+        outlet_node = self.get_outlet_node(id_outlet_node)
+
+        p_out = outlet_node.pressure()
+        ref = outlet_node.get_refrigerant()
+        return ref.T_sat(p_out)
+
+    @basic_property(superheating=NumericProperty(0, inf, unit='K'))
+    def _eval_superheating(self):
+        id_outlet_node = self.get_id_outlet_nodes()[0]
+        outlet_node = self.get_outlet_node(id_outlet_node)
+
+        t_out = outlet_node.temperature()
+        p_out = outlet_node.pressure()
+        ref = outlet_node.get_refrigerant()
+        return t_out - ref.T_sat(p_out)
+
+    @basic_property(pressure_lose=NumericProperty(0, inf, unit='kPa'))
+    def _eval_pressure_lose(self):
+        id_inlet_node = self.get_id_inlet_nodes()[0]
+        inlet_node = self.get_inlet_node(id_inlet_node)
+        id_outlet_node = self.get_id_outlet_nodes()[0]
+        outlet_node = self.get_outlet_node(id_outlet_node)
+
+        p_in = inlet_node.pressure()
+        p_out = outlet_node.pressure()
+        return (p_in - p_out) / 1000.0
+
+    def calculated_result(self, key):
+
+
         if key == self.COOLING_POWER:
-            h_in = inlet_node.enthalpy()
-            h_out = outlet_node.enthalpy()
-            mass_flow = outlet_node.mass_flow()
-            return mass_flow*(h_out-h_in) / 1000.0
+            return self._eval_cooling_power()
 
         elif key == self.SATURATION_TEMPERATURE:
-            p_out = outlet_node.pressure()
-            ref = outlet_node.get_refrigerant()
-            return ref.T_sat(p_out)
+            return self._eval_saturation_temperature()
 
         elif key == self.SUPERHEATING:
-            t_out = outlet_node.temperature()
-            p_out = outlet_node.pressure()
-            ref = outlet_node.get_refrigerant()
-            return t_out - ref.T_sat(p_out)
+            return self._eval_superheating()
 
         elif key == self.PRESSURE_LOSE:
-            p_in = inlet_node.pressure()
-            p_out = outlet_node.pressure()
-            return (p_in - p_out) / 1000.0
+            return self._eval_pressure_lose()
         else:
             raise PropertyNameError("Invalid property. %s  is not in %s]" % key)
 
-    def _eval_basic_equation(self, basic_property):
-            return [self.get_basic_property(basic_property), self._calculated_result(basic_property)]
+    def _eval_basic_equation(self, key_basic_property):
+            return [self.get_property(key_basic_property), self.calculated_result(key_basic_property)]
 
     def _eval_intrinsic_equations(self):
         return None
