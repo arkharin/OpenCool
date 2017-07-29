@@ -7,7 +7,7 @@ Define the Compressor component.
 """
 from math import inf
 
-from scr.logic.components.component import Component as cmp
+from scr.logic.components.component import Component as Cmp
 from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
 from scr.logic.errors import PropertyNameError
 from scr.logic.refrigerants.refrigerant import Refrigerant
@@ -20,20 +20,21 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_compressor', cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
-class Theoretical_victor(cmp):
+@component('theoretical_compressor', Cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
+class Theoretical_victor(Cmp):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'
     POWER_CONSUMPTION = 'power_consumption'
     VOLUMETRIC_EFFICIENCY = 'volumetric_efficiency'
 
-    def __init__(self, name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data)
+    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
-    ### Fundamental properties equations ###
+    """ Fundamental properties equations """
 
-    ### Basic properties equations ###
-    # nombre siguiendo pep8 (solo una palabra)
+    """ Basic properties equations """
+    # @basic_property(name of basic property = value type)
+    # Name must be only one word
     @basic_property(isentropic_efficiency=NumericProperty(0, 1))
     def _eval_eq_isentropic_effiency(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]
@@ -107,44 +108,6 @@ class Theoretical_victor(cmp):
         else:
             return PropertyNameError(
                 "Invalid property. %s  is not in %s]" % key)
-
-############## old ##########
-
-    # def calculated_result(self, key):
-    #     id_inlet_node = list(self.get_id_inlet_nodes())[0]
-    #     inlet_node = self.get_inlet_node(id_inlet_node)
-    #     id_outlet_node = list(self.get_id_outlet_nodes())[0]
-    #     outlet_node = self.get_outlet_node(id_outlet_node)
-    #
-    #     if key == self.ISENTROPIC_EFFICIENCY:
-    #         h_in = inlet_node.enthalpy()
-    #         s_in = inlet_node.entropy()
-    #         h_out = outlet_node.enthalpy()
-    #         p_out = outlet_node.pressure()
-    #         ref = outlet_node.get_refrigerant()
-    #         h_is = ref.h(Refrigerant.PRESSURE, p_out, Refrigerant.ENTROPY, s_in)
-    #         return (h_is - h_in) / (h_out - h_in)
-    #
-    #     elif key == self.POWER_CONSUMPTION:
-    #         h_in = inlet_node.enthalpy()
-    #         h_out = outlet_node.enthalpy()
-    #         mass_flow = h_out.mass_flow()
-    #         return mass_flow * (h_out - h_in) / 1000.0
-    #
-    #     elif key == self.VOLUMETRIC_EFFICIENCY:
-    #         mass_flow = inlet_node.mass_flow()
-    #         density = inlet_node.density()
-    #         volumetric_efficiency = self.get_property(key)
-    #         return mass_flow * density / volumetric_efficiency
-    #
-    #     elif key == self.DISPLACEMENT_VOLUME:
-    #         mass_flow = inlet_node.mass_flow()
-    #         density = inlet_node.density()
-    #         displacement_volume = self.get_property(key)
-    #         return mass_flow * density / displacement_volume
-    #     else:
-    #         return PropertyNameError(
-    #             "Invalid property. %s  is not in %s]" % key)
 
     def _eval_basic_equation(self, basic_property):
         return [self.get_property(basic_property), self.calculated_result(basic_property)]

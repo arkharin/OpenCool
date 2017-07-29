@@ -6,19 +6,16 @@
 Define the Expansion Valve component.
 """
 
-from scr.logic.components.component import Component as cmp
-from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
-from scr.helpers.properties import NumericProperty
-from math import inf
+from scr.logic.components.component import Component as Cmp
+from scr.logic.components.component import component, fundamental_property
 
 
 def update_saved_data_to_last_version(orig_data, orig_version):
-    # Here will be the code to update to update saved data to current format
     return orig_data
 
 
-@component('theoretical_expansion_valve', cmp.EXPANSION_VALVE, 1, update_saved_data_to_last_version)
-class Theoretical(cmp):
+@component('theoretical_expansion_valve', Cmp.EXPANSION_VALVE, 1, update_saved_data_to_last_version)
+class Theoretical(Cmp):
 
     def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
@@ -29,6 +26,7 @@ class Theoretical(cmp):
     def _eval_basic_equation(self, key_basic_property):
         return None
 
+    """ Fundamental properties equations """
     @fundamental_property()
     def _eval_intrinsic_equations(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]

@@ -6,20 +6,19 @@
 Define the Evaporator component.
 """
 
-from scr.logic.common import MAX_FLOAT_VALUE
-from scr.logic.components.component import Component as cmp
+from scr.logic.components.component import Component as Cmp
 from scr.logic.errors import PropertyNameError
-from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
+from scr.logic.components.component import component, basic_property
 from scr.helpers.properties import NumericProperty
 from math import inf
 
+
 def update_saved_data_to_last_version(orig_data, orig_version):
-    # Here will be the code to update to update saved data to current format
     return orig_data
 
 
-@component('theoretical_evaporator', cmp.EVAPORATOR, 1, update_saved_data_to_last_version)
-class Theoretical(cmp):
+@component('theoretical_evaporator', Cmp.EVAPORATOR, 1, update_saved_data_to_last_version)
+class Theoretical(Cmp):
     COOLING_POWER = 'cooling_power'
     PRESSURE_LOSE = 'pressure_lose'
     SATURATION_TEMPERATURE = 'saturation_temperature'
@@ -71,7 +70,6 @@ class Theoretical(cmp):
         return (p_in - p_out) / 1000.0
 
     def calculated_result(self, key):
-
 
         if key == self.COOLING_POWER:
             return self._eval_cooling_power()

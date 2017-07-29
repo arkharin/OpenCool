@@ -6,8 +6,7 @@
 Define the Compressor component.
 """
 
-from scr.logic.common import MAX_FLOAT_VALUE
-from scr.logic.components.component import Component as cmp
+from scr.logic.components.component import Component as Cmp
 from scr.logic.errors import PropertyNameError
 from scr.logic.refrigerants.refrigerant import Refrigerant
 from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
@@ -21,27 +20,27 @@ def update_saved_data_to_last_version(orig_data, orig_version):
 
 
 # Template:
-#@component(key name, version, function to update from old versions)
+# @component(key name, version, function to update from old versions)
 # key_name is unique
-@component('isentropic_compressor', cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
-class Theoretical(cmp):
+@component('isentropic_compressor', Cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
+class Theoretical(Cmp):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'
     POWER_CONSUMPTION = 'power_consumption'
     VOLUMETRIC_EFFICIENCY = 'volumetric_efficiency'
 
-    # TODO sacar component type, ponerlo en el decorador y en component info.
     def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
-    ### Fundamental properties equations ###
+    """ Fundamental properties equations """
+    # See theoretical.py expansion valve.
 
-    ### Basic properties equations ###
+    """ Basic properties equations """
     # @basic_property(name of basic property = value type)
     # Name must be only one word
     @basic_property(isentropic_efficiency=NumericProperty(0, 1))
     # function name can be arbitrary
-    def _eval_eq_isentropic_effiency(self):
+    def _eval_eq_isentropic_efficiency(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
         id_outlet_node = self.get_id_outlet_nodes()[0]
@@ -57,9 +56,9 @@ class Theoretical(cmp):
 
     @basic_property(power_consumption=NumericProperty(0, 1, unit='kW'))
     def _eval_eq_power_consumption(self):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_node = list(self.get_id_outlet_nodes())[0]
+        id_outlet_node = self.get_id_outlet_nodes()[0]
         outlet_node = self.get_outlet_node(id_outlet_node)
 
         h_in = inlet_node.enthalpy()
@@ -67,38 +66,34 @@ class Theoretical(cmp):
         mass_flow = outlet_node.mass_flow()
         return mass_flow * (h_out - h_in) / 1000.0
 
-    ### Auxiliary properties equations ###
+    """ Auxiliary properties equations """
     @auxiliary_property(displacement_volume=NumericProperty(0, inf, unit='m3/h'))
     def _eval_eq_displacement_volume(self):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_node = list(self.get_id_outlet_nodes())[0]
-        outlet_node = self.get_outlet_node(id_outlet_node)
 
         mass_flow = inlet_node.mass_flow()
         density = inlet_node.density()
-        # Remember, magics has happpened and all static
+        # Remember, magics has happened and all static
         # attributes have been transformed to instance attributes
         # and primitive types ;)
         return mass_flow * density / self.displacement_volume
 
     @auxiliary_property(volumetric_efficiency=NumericProperty(0, 1))
     def _eval_eq_volumetric_efficiency(self):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_node = list(self.get_id_outlet_nodes())[0]
-        outlet_node = self.get_outlet_node(id_outlet_node)
 
         mass_flow = inlet_node.mass_flow()
         density = inlet_node.density()
-        # Remember, magics has happpened and all static
+        # Remember, magics has happened and all static
         # attributes have been transformed to instance attributes
         # and primitive types ;)
         return mass_flow * density / self.volumetric_efficiency
 
     def calculated_result(self, key):
         if key == self.ISENTROPIC_EFFICIENCY:
-            return self._eval_eq_isentropic_effiency()
+            return self._eval_eq_isentropic_efficiency()
 
         elif key == self.POWER_CONSUMPTION:
             return self._eval_eq_power_consumption()

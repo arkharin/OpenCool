@@ -5,24 +5,21 @@
 """
 Define the Mixer Flow component.
 """
-from scr.logic.common import MAX_FLOAT_VALUE
-from scr.logic.components.component import Component as cmp
+from scr.logic.components.component import Component as Cmp
 from scr.logic.errors import PropertyNameError
-from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
+from scr.logic.components.component import component, fundamental_property, basic_property
 from scr.helpers.properties import NumericProperty
 from math import inf
 
 
 def update_saved_data_to_last_version(orig_data, orig_version):
-    # Here will be the code to update to update saved data to current format
     return orig_data
 
 
-@component('theoretical_mixer_flow', cmp.MIXER_FLOW, 1, update_saved_data_to_last_version)
-class Theoretical(cmp):
+@component('theoretical_mixer_flow', Cmp.MIXER_FLOW, 1, update_saved_data_to_last_version)
+class Theoretical(Cmp):
     PRESSURE_LOSE_1 = 'pressure lose inlet 1 - outlet'
     PRESSURE_LOSE_2 = 'pressure lose inlet 2 - outlet'
-
 
     def __init__(self, data, circuit_nodes):
         super().__init__(data, circuit_nodes)
