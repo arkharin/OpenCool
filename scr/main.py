@@ -7,7 +7,8 @@ from scr.logic.solvers.solver import Solver
 from scr.model.model import load, save
 from importlib import import_module
 import scr.logic.components.component as cmp2
-import os, sys
+import os
+import sys
 from pathlib import Path
 
 

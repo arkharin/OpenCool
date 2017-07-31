@@ -5,7 +5,7 @@
 """
 Base classes for the program
 """
-from scr.logic.common import check_type, check_input_int
+from scr.logic.common import check_input_int
 from scr.logic.errors import IdDuplicatedError
 
 

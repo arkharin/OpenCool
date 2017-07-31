@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 from importlib import import_module
 from scr.helpers.properties import StrRestricted
 from scr.logic.base_classes import Element
-from scr.logic.errors import PropertyNameError, NodeBuilderError, BuildError
+from scr.logic.errors import PropertyNameError, BuildError
 from scr.logic.warnings import NodeBuilderWarning
 from scr.logic.refrigerants.refrigerant import Refrigerant
 

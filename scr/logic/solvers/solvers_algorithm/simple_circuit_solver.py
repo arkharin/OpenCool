@@ -8,7 +8,6 @@ Solver for simple circuit
 
 import numpy as np
 from scipy.optimize import root
-
 from scr.logic.components.component import Component
 from scr.logic.solvers.solvers_algorithm.solver_algorithm import Solver_algorithm
 

@@ -11,7 +11,7 @@ import scr.logic.nodes.node as nd
 import scr.logic.refrigerants.refrigerant as ref
 from scr.logic.base_classes import Element, Identifier
 from scr.helpers.properties import StrRestricted
-from scr.logic.errors import IdDuplicatedError, ValuePropertyError, CircuitBuilderError, BuildError
+from scr.logic.errors import ValuePropertyError, CircuitBuilderError, BuildError
 from scr.logic.warnings import CircuitBuilderWarning
 
 
