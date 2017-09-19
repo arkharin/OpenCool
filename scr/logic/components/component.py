@@ -42,15 +42,15 @@ def component(key, component_type, version=1, updater_data_func=None):
         # Search those functions in the class that has been decorated with *_property decorator and add info in
         # to component info
         for member in vars(cls).values():
-            if callable(member) and hasattr(member, '_property_name'):
-                if member._propery_type == 'fundamental':
-                    cmp_info.add_fundamental_property(member._property_name, member._property_value)
-                elif member._propery_type == 'basic':
+            if callable(member) and hasattr(member, '_property_type'):
+                if member._property_type == 'fundamental':
+                    pass # It's an equation, not a property. It doesn't have name.
+                elif member._property_type == 'basic':
                     cmp_info.add_basic_property(member._property_name, member._property_value)
-                elif member._propery_type == 'extended':
+                elif member._property_type == 'extended':
                     cmp_info.add_extended_property(member._property_name, member._property_value)
                 else:
-                    raise ValueError('_propery_type unknown')
+                    raise ValueError('_property_type unknown')
 
         ComponentInfoFactory().add(cmp_info)
         ComponentFactory().add(key, cls)
@@ -59,28 +59,22 @@ def component(key, component_type, version=1, updater_data_func=None):
     return real_decorator
 
 
-def fundamental_property(**kwargs):
+def fundamental_equation():
     def real_decorator(func):
-        if len(kwargs) != 1 :
-            ValueError('fundamental_property decorator must be called with one keyword argument that it will be the property name')
-
-        for property_name, value in kwargs.items():
-            setattr(func, '_property_name', property_name)
-            setattr(func, '_propery_type', 'fundamental' )
-            setattr(func, '_property_value', value)
-
+        setattr(func, '_property_type', 'fundamental')
         return func
+
     return real_decorator
 
 
 def basic_property(**kwargs):
     def real_decorator(func):
         if len(kwargs) != 1 :
-            ValueError('basic_property decorator must be called with one keyword argument that it will be the property name')
-
+            raise ValueError('basic_property decorator must be called with one keyword argument that it will be the property name')
+        # Because we are lazy. It's the fastest way to have the key and value. Only iterate one time
         for property_name, value in kwargs.items():
             setattr(func, '_property_name', property_name)
-            setattr(func, '_propery_type', 'basic' )
+            setattr(func, '_property_type', 'basic' )
             setattr(func, '_property_value', value)
 
         return func
@@ -90,11 +84,11 @@ def basic_property(**kwargs):
 def auxiliary_property(**kwargs):
     def real_decorator(func):
         if len(kwargs) != 1 :
-            ValueError('auxiliary_property decorator must be called with one keyword argument that it will be the property name')
-
+            raise ValueError('auxiliary_property decorator must be called with one keyword argument that it will be the property name')
+        # Because we are lazy. It's the fastest way to have the key and value. Only iterate one time
         for property_name, value in kwargs.items():
             setattr(func, '_property_name', property_name)
-            setattr(func, '_propery_type', 'extended' )
+            setattr(func, '_property_type', 'extended' )
             setattr(func, '_property_value', value)
 
         return func
@@ -130,7 +124,7 @@ class Component(ABC, Element):
         self._optional_properties_results = {}
 
         # Create and register the properties and equations. The only use is for register equations functions.
-        self._fundamental_eqs = {}
+        self._fundamental_eqs = []
         self._basic_eqs = {}
         self._auxiliary_eqs = {}
 
@@ -138,33 +132,35 @@ class Component(ABC, Element):
         # and add equations dictionaries
         for s_attribute in dir(self):
             attribute = getattr(self, s_attribute)
-            if callable(attribute) and hasattr(attribute, '_property_name'):
-                property_name = attribute._property_name
-                if not hasattr(self, property_name):
-                    setattr(self, property_name, None)
-                else:
-                    raise ValueError('Property %s has already been defined', property_name)
+            if callable(attribute) and hasattr(attribute, '_property_type'):
+                if hasattr(attribute,'_property_name'):
+                    property_name = attribute._property_name
+                    if not hasattr(self, property_name):
+                        setattr(self, property_name, None)
+                    else:
+                        raise ValueError('Property %s has already been defined', property_name)
 
-                if attribute._propery_type == 'fundamental':
-                    self._fundamental_eqs[property_name] = attribute
-                elif attribute._propery_type == 'basic':
-                    self._basic_eqs[property_name] = attribute
-                elif attribute._propery_type == 'extended':
-                    self._auxiliary_eqs[property_name] = attribute
+                    if attribute._property_type == 'basic':
+                        self._basic_eqs[property_name] = attribute
+                    elif attribute._property_type == 'extended':
+                        self._auxiliary_eqs[property_name] = attribute
+                    else:
+                        raise ValueError('_property_type unknown')
+
+                elif attribute._property_type == 'fundamental':
+                    self._fundamental_eqs.append(attribute)
                 else:
-                    raise ValueError('_propery_type unknown')
+                    raise ValueError('_property_type unknown')
 
         for property_name, property_value in component_data.items():
             if hasattr(self, property_name):
                 setattr(self, property_name, property_value)
-                if property_name in self._fundamental_eqs:
-                    continue
-                elif property_name in self._basic_eqs:
+                if property_name in self._basic_eqs:
                     self._basic_properties[property_name] = property_value
                 elif property_name in self._auxiliary_eqs:
                     self._auxiliary_properties[property_name] = property_value
                 else:
-                    raise ValueError('_propery_type unknown')
+                    raise ValueError('_property_type unknown')
             else:
                 raise ValueError('Property name unknown')
 
@@ -514,8 +510,7 @@ class ComponentInfo:
         self._component_version = component_version
         self.updater_data_func = updater_data_func
 
-        # Properties equations
-        self._fundamental_properties_info = {}
+        # Properties info
         self._basic_properties_info = {}
         self._extended_properties_info = {}
 
@@ -529,17 +524,11 @@ class ComponentInfo:
             # dict_to_save[property_name] = PropertyInfo(property_value, property_func_name)
         dict_to_save[property_name] = property_value
 
-    def add_fundamental_property(self, property_name, property_value):
-        self._add_property(self._fundamental_properties_info, property_name, property_value)
-
     def add_basic_property(self, property_name, property_value):
         self._add_property(self._basic_properties_info, property_name, property_value)
 
     def add_extended_property(self, property_name, property_value):
         self._add_property(self._extended_properties_info, property_name, property_value)
-
-    def get_fundamental_properties(self):
-        return self._fundamental_properties_info
 
     def get_basic_properties(self):
         return self._basic_properties_info
@@ -548,7 +537,7 @@ class ComponentInfo:
         return self._extended_properties_info
 
     def get_properties(self):
-        return {**self.get_fundamental_properties(), **self.get_basic_properties(), **self.get_extended_properties()}
+        return {**self.get_basic_properties(), **self.get_extended_properties()}
 
     def get_updater_data_func(self):
         return self.updater_data_func
