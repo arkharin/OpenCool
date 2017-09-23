@@ -39,7 +39,7 @@ class Theoretical(Cmp):
     # @basic_property(name of basic property = value type)
     # Name must be only one word
     @basic_property(isentropic_efficiency=NumericProperty(0, 1))
-    # function name can be arbitrary
+    # function name can be arbitrary. Return the equation of the property evaluated.
     def _eval_eq_isentropic_efficiency(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -52,7 +52,7 @@ class Theoretical(Cmp):
         p_out = outlet_node.pressure()
         ref = outlet_node.get_refrigerant()
         h_is = ref.h(Refrigerant.PRESSURE, p_out, Refrigerant.ENTROPY, s_in)
-        return [self.isentropic_efficiency, (h_is - h_in) / (h_out - h_in)]
+        return (h_is - h_in) / (h_out - h_in)
 
     @basic_property(power_consumption=NumericProperty(0, 1, unit='kW'))
     def _eval_eq_power_consumption(self):
@@ -64,10 +64,11 @@ class Theoretical(Cmp):
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
         mass_flow = outlet_node.mass_flow()
-        return [self.power_consumption, mass_flow * (h_out - h_in) / 1000.0]
+        return mass_flow * (h_out - h_in) / 1000.0
 
     """ Auxiliary properties equations """
     @auxiliary_property(displacement_volume=NumericProperty(0, inf, unit='m3/h'))
+    # function name can be arbitrary. Return the equation of the property evaluated.
     def _eval_eq_displacement_volume(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

@@ -33,7 +33,7 @@ class Theoretical(Cmp):
         inlet_node_1 = self.get_inlet_node(id_inlet_nodes[0])
         p_in = inlet_node_1.pressure()
         p_out = outlet_node.pressure()
-        return [self.pressure_lose_1, (p_in - p_out) / 1000.0]
+        return (p_in - p_out) / 1000.0
 
     @basic_property(pressure_lose_2= NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose_2(self):
@@ -44,7 +44,7 @@ class Theoretical(Cmp):
         inlet_node_2 = self.get_inlet_node(id_inlet_nodes[1])
         p_in = inlet_node_2.pressure()
         p_out = outlet_node.pressure()
-        return [self.pressure_lose_2, (p_in - p_out) / 1000.0]
+        return (p_in - p_out) / 1000.0
 
     def calculated_result(self, key):
         if key == self.PRESSURE_LOSE_1:

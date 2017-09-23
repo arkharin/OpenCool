@@ -36,7 +36,7 @@ class Theoretical(Cmp):
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
         mass_flow = outlet_node.mass_flow()
-        return [self.heating_power, mass_flow * (h_in - h_out) / 1000.0]
+        return mass_flow * (h_in - h_out) / 1000.0
 
     @basic_property(saturation_temperature=NumericProperty(0, inf, unit='K'))
     def _eval_saturation_temperature(self):
@@ -45,7 +45,7 @@ class Theoretical(Cmp):
 
         p_in = inlet_node.pressure()
         ref = inlet_node.get_refrigerant()
-        return [self.saturation_temperature, ref.T_sat(p_in)]
+        return ref.T_sat(p_in)
 
     @basic_property(subcooling=NumericProperty(0, inf, unit='K'))
     def _eval_subcooling(self):
@@ -55,7 +55,7 @@ class Theoretical(Cmp):
         t_out = outlet_node.temperature()
         p_out = outlet_node.pressure()
         ref = outlet_node.get_refrigerant()
-        return [self.subcooling, ref.T_sat(p_out) - t_out]
+        return ref.T_sat(p_out) - t_out
 
     @basic_property(pressure_lose=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_loss(self):
@@ -66,7 +66,7 @@ class Theoretical(Cmp):
 
         p_in = inlet_node.pressure()
         p_out = outlet_node.pressure()
-        return [self.pressure_lose, (p_in - p_out) / 1000.0]
+        return (p_in - p_out) / 1000.0
 
     def calculated_result(self, key):
         if key == self.HEATING_POWER:

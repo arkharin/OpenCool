@@ -25,6 +25,7 @@ class Theoretical(Cmp):
 
     """ Fundamental properties equations """
     @fundamental_equation()
+    # function name can be arbitrary. Return a single vector with each side of the equation evaluated.
     def _eval_intrinsic_equations(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)

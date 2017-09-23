@@ -37,7 +37,7 @@ class Theoretical(Cmp):
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
         mass_flow = outlet_node.mass_flow()
-        return [self.cooling_power, mass_flow * (h_out - h_in) / 1000.0]
+        return mass_flow * (h_out - h_in) / 1000.0
 
     @basic_property(saturation_temperature=NumericProperty(0, inf, unit='K'))
     def _eval_saturation_temperature(self):
@@ -46,7 +46,7 @@ class Theoretical(Cmp):
 
         p_out = outlet_node.pressure()
         ref = outlet_node.get_refrigerant()
-        return [self.saturation_temperature, ref.T_sat(p_out)]
+        return ref.T_sat(p_out)
 
     @basic_property(superheating=NumericProperty(0, inf, unit='K'))
     def _eval_superheating(self):
@@ -56,7 +56,7 @@ class Theoretical(Cmp):
         t_out = outlet_node.temperature()
         p_out = outlet_node.pressure()
         ref = outlet_node.get_refrigerant()
-        return [self.superheating, t_out - ref.T_sat(p_out)]
+        return t_out - ref.T_sat(p_out)
 
     @basic_property(pressure_lose=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose(self):
@@ -67,7 +67,7 @@ class Theoretical(Cmp):
 
         p_in = inlet_node.pressure()
         p_out = outlet_node.pressure()
-        return [self.pressure_lose, (p_in - p_out) / 1000.0]
+        return (p_in - p_out) / 1000.0
 
     def calculated_result(self, key):
 

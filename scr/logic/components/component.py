@@ -88,6 +88,7 @@ def auxiliary_property(**kwargs):
         # Because we are lazy. It's the fastest way to have the key and value. Only iterate one time
         for property_name, value in kwargs.items():
             setattr(func, '_property_name', property_name)
+            # FIXME Change extended to auxiliary
             setattr(func, '_property_type', 'extended' )
             setattr(func, '_property_value', value)
 
@@ -220,10 +221,12 @@ class Component(ABC, Element):
 
         # Intrinsic equations evaluation
         for func in self._fundamental_eqs:
+            # Intrinsic equations return a single vector
             results.append(func())
         # basic equations evaluation
         for key in self.get_basic_properties():
-            results.append(self._basic_eqs[key]())
+            # Basic properties return the equation evaluated.
+            results.append([self.get_property(key), self._basic_eqs[key]()])
 
         return results
 
