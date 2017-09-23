@@ -39,14 +39,14 @@ class Postsolver_v01(PostSolver):
         for component in components:
             component = components[component]
             self._calculated_basic_properties(component)
-            self._calculated_optional_properties(component)
+            self._calculated_auxiliary_properties(component)
         return circuit
 
     def _calculated_basic_properties(self, cmp):
         self._calculate_properties(cmp, cmp.get_basic_properties())
 
-    def _calculated_optional_properties(self, cmp):
-        self._calculate_properties(cmp, cmp.get_optional_properties())
+    def _calculated_auxiliary_properties(self, cmp):
+        self._calculate_properties(cmp, cmp.get_auxiliary_properties())
 
     def _calculate_properties(self, cmp, properties):
         for key in properties:

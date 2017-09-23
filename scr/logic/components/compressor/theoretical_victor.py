@@ -62,7 +62,7 @@ class Theoretical_victor(Cmp):
         mass_flow = h_out.mass_flow()
         return mass_flow * (h_out - h_in) / 1000.0
 
-    ### Extended properties equations ###
+    ### Auxiliary properties equations ###
     @auxiliary_property(displacement_volume=NumericProperty(0, inf))
     def _eval_eq_displacement_volume(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]

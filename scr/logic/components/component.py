@@ -47,8 +47,8 @@ def component(key, component_type, version=1, updater_data_func=None):
                     pass # It's an equation, not a property. It doesn't have name.
                 elif member._property_type == 'basic':
                     cmp_info.add_basic_property(member._property_name, member._property_value)
-                elif member._property_type == 'extended':
-                    cmp_info.add_extended_property(member._property_name, member._property_value)
+                elif member._property_type == 'auxiliary':
+                    cmp_info.add_auxiliary_property(member._property_name, member._property_value)
                 else:
                     raise ValueError('_property_type unknown')
 
@@ -88,8 +88,7 @@ def auxiliary_property(**kwargs):
         # Because we are lazy. It's the fastest way to have the key and value. Only iterate one time
         for property_name, value in kwargs.items():
             setattr(func, '_property_name', property_name)
-            # FIXME Change extended to auxiliary
-            setattr(func, '_property_type', 'extended' )
+            setattr(func, '_property_type', 'auxiliary' )
             setattr(func, '_property_value', value)
 
         return func
@@ -143,7 +142,7 @@ class Component(ABC, Element):
 
                     if attribute._property_type == 'basic':
                         self._basic_eqs[property_name] = attribute
-                    elif attribute._property_type == 'extended':
+                    elif attribute._property_type == 'auxiliary':
                         self._auxiliary_eqs[property_name] = attribute
                     else:
                         raise ValueError('_property_type unknown')
@@ -210,7 +209,7 @@ class Component(ABC, Element):
     def solve_property(self, key):
         if key in self.get_basic_properties():
             self._basic_properties_results[key] = self._basic_eqs[key]()
-        elif key in self.get_optional_properties():
+        elif key in self.get_auxiliary_properties():
             self._auxiliary_properties_results[key] = self._auxiliary_eqs[key]()
         else:
             raise ComponentWarning('%s property is not allowed in %s component' % (key, self.get_component_info().get_component_type()))
@@ -229,11 +228,11 @@ class Component(ABC, Element):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._basic_properties_results
 
-    def get_optional_properties(self):
+    def get_auxiliary_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._auxiliary_properties
 
-    def get_optional_properties_results(self):
+    def get_auxiliary_properties_results(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._auxiliary_properties_results
 
@@ -289,8 +288,8 @@ class AComponentSerializer(ABC):
     INLET_NODES = 'inlet nodes'
     NAME = 'name'
     NODES = 'nodes'
-    OPTIONAL_PROPERTIES = 'optional properties'
-    OPTIONAL_PROPERTIES_CALCULATED = 'optional properties calculate'
+    AUXILIARY_PROPERTIES = 'auxiliary properties'
+    AUXILIARY_PROPERTIES_CALCULATED = 'auxiliary properties calculate'
     OUTLET_NODES = 'outlet nodes'
     VERSION = 'version'
 
@@ -320,8 +319,8 @@ class AComponentSerializer(ABC):
             i += 1
         for basic_property in cmp_data[self.BASIC_PROPERTIES]:
             cmp.set_attribute(basic_property, cmp_data[self.BASIC_PROPERTIES][basic_property])
-        for optional_property in cmp_data[self.OPTIONAL_PROPERTIES]:
-            cmp.set_attribute(optional_property, cmp_data[self.OPTIONAL_PROPERTIES][optional_property])
+        for auxiliary_property in cmp_data[self.AUXILIARY_PROPERTIES]:
+            cmp.set_attribute(auxiliary_property, cmp_data[self.AUXILIARY_PROPERTIES][auxiliary_property])
 
         return cmp
 
@@ -334,10 +333,10 @@ class AComponentSerializer(ABC):
         self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES, component.get_basic_properties())
         self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES_CALCULATED,
                                    component.get_basic_properties_results())
-        self._serialize_properties(cmp_serialized, self.OPTIONAL_PROPERTIES,
-                                   component.get_optional_properties())
-        self._serialize_properties(cmp_serialized, self.OPTIONAL_PROPERTIES_CALCULATED,
-                                   component.get_optional_properties_results())
+        self._serialize_properties(cmp_serialized, self.AUXILIARY_PROPERTIES,
+                                   component.get_auxiliary_properties())
+        self._serialize_properties(cmp_serialized, self.AUXILIARY_PROPERTIES_CALCULATED,
+                                   component.get_auxiliary_properties_results())
         return cmp_serialized
 
     def _serialize_properties(self, cmp_serialized, properties_type, properties):
@@ -492,7 +491,7 @@ class ComponentInfo:
 
         # Properties info
         self._basic_properties_info = {}
-        self._extended_properties_info = {}
+        self._auxiliary_properties_info = {}
 
     def _add_property(self, dict_to_save, property_name, property_value):
 
@@ -507,17 +506,17 @@ class ComponentInfo:
     def add_basic_property(self, property_name, property_value):
         self._add_property(self._basic_properties_info, property_name, property_value)
 
-    def add_extended_property(self, property_name, property_value):
-        self._add_property(self._extended_properties_info, property_name, property_value)
+    def add_auxiliary_property(self, property_name, property_value):
+        self._add_property(self._auxiliary_properties_info, property_name, property_value)
 
     def get_basic_properties(self):
         return self._basic_properties_info
 
-    def get_extended_properties(self):
-        return self._extended_properties_info
+    def get_auxiliary_properties(self):
+        return self._auxiliary_properties_info
 
     def get_properties(self):
-        return {**self.get_basic_properties(), **self.get_extended_properties()}
+        return {**self.get_basic_properties(), **self.get_auxiliary_properties()}
 
     def get_updater_data_func(self):
         return self.updater_data_func
