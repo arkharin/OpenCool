@@ -8,7 +8,7 @@ Define the Compressor component.
 from math import inf
 
 from scr.logic.components.component import Component as Cmp
-from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
+from scr.logic.components.component import component, fundamental_equation, basic_property, auxiliary_property
 from scr.logic.errors import PropertyNameError
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
@@ -108,9 +108,3 @@ class Theoretical_victor(Cmp):
         else:
             return PropertyNameError(
                 "Invalid property. %s  is not in %s]" % key)
-
-    def _eval_basic_equation(self, basic_property):
-        return [self.get_property(basic_property), self.calculated_result(basic_property)]
-
-    def _eval_intrinsic_equations(self):
-        return None

@@ -9,7 +9,7 @@ Define the Compressor component.
 from scr.logic.components.component import Component as Cmp
 from scr.logic.errors import PropertyNameError
 from scr.logic.refrigerants.refrigerant import Refrigerant
-from scr.logic.components.component import component, fundamental_property, basic_property, auxiliary_property
+from scr.logic.components.component import component, fundamental_equation, basic_property, auxiliary_property
 from scr.helpers.properties import NumericProperty
 from math import inf
 
@@ -52,7 +52,7 @@ class Theoretical(Cmp):
         p_out = outlet_node.pressure()
         ref = outlet_node.get_refrigerant()
         h_is = ref.h(Refrigerant.PRESSURE, p_out, Refrigerant.ENTROPY, s_in)
-        return (h_is - h_in) / (h_out - h_in)
+        return [self.isentropic_efficiency, (h_is - h_in) / (h_out - h_in)]
 
     @basic_property(power_consumption=NumericProperty(0, 1, unit='kW'))
     def _eval_eq_power_consumption(self):
@@ -64,7 +64,7 @@ class Theoretical(Cmp):
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
         mass_flow = outlet_node.mass_flow()
-        return mass_flow * (h_out - h_in) / 1000.0
+        return [self.power_consumption, mass_flow * (h_out - h_in) / 1000.0]
 
     """ Auxiliary properties equations """
     @auxiliary_property(displacement_volume=NumericProperty(0, inf, unit='m3/h'))
@@ -107,9 +107,3 @@ class Theoretical(Cmp):
         else:
             return PropertyNameError(
                 "Invalid property. %s  is not in %s]" % key)
-
-    def _eval_basic_equation(self, key_basic_property):
-        return [self.get_property(key_basic_property), self.calculated_result(key_basic_property)]
-
-    def _eval_intrinsic_equations(self):
-        return None

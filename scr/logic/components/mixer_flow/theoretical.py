@@ -7,7 +7,7 @@ Define the Mixer Flow component.
 """
 from scr.logic.components.component import Component as Cmp
 from scr.logic.errors import PropertyNameError
-from scr.logic.components.component import component, fundamental_property, basic_property
+from scr.logic.components.component import component, fundamental_equation, basic_property
 from scr.helpers.properties import NumericProperty
 from math import inf
 
@@ -33,7 +33,7 @@ class Theoretical(Cmp):
         inlet_node_1 = self.get_inlet_node(id_inlet_nodes[0])
         p_in = inlet_node_1.pressure()
         p_out = outlet_node.pressure()
-        return (p_in - p_out) / 1000.0
+        return [self.pressure_lose_1, (p_in - p_out) / 1000.0]
 
     @basic_property(pressure_lose_2= NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose_2(self):
@@ -44,7 +44,7 @@ class Theoretical(Cmp):
         inlet_node_2 = self.get_inlet_node(id_inlet_nodes[1])
         p_in = inlet_node_2.pressure()
         p_out = outlet_node.pressure()
-        return (p_in - p_out) / 1000.0
+        return [self.pressure_lose_2, (p_in - p_out) / 1000.0]
 
     def calculated_result(self, key):
         if key == self.PRESSURE_LOSE_1:
@@ -56,11 +56,8 @@ class Theoretical(Cmp):
         else:
             raise PropertyNameError("Invalid property. %s  is not in %s]" % key)
 
-    def _eval_basic_equation(self, key_basic_property):
-        return [self.get_property(key_basic_property), self.calculated_result(key_basic_property)]
-
-    @fundamental_property()
-    def _eval_intrinsic_equations(self):
+    @fundamental_equation()
+    def _eval_intrinsic_equations_enthalpy(self):
         id_inlet_nodes = list(self.get_id_inlet_nodes())
         inlet_node_1 = self.get_inlet_node(id_inlet_nodes[0])
         inlet_node_2 = self.get_inlet_node(id_inlet_nodes[1])
@@ -75,4 +72,4 @@ class Theoretical(Cmp):
         mass_flow_in_2 = inlet_node_2.mass_flow()
         mass_flow_out = outlet_node.mass_flow()
 
-        return [[mass_flow_in_1 * h_in_1 + mass_flow_in_2 * h_in_2, mass_flow_out * h_out]]
+        return [mass_flow_in_1 * h_in_1 + mass_flow_in_2 * h_in_2, mass_flow_out * h_out]

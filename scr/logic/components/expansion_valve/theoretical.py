@@ -7,7 +7,7 @@ Define the Expansion Valve component.
 """
 
 from scr.logic.components.component import Component as Cmp
-from scr.logic.components.component import component, fundamental_property
+from scr.logic.components.component import component, fundamental_equation
 
 
 def update_saved_data_to_last_version(orig_data, orig_version):
@@ -23,11 +23,8 @@ class Theoretical(Cmp):
     def calculated_result(self, key):
         return None
 
-    def _eval_basic_equation(self, key_basic_property):
-        return None
-
     """ Fundamental properties equations """
-    @fundamental_property()
+    @fundamental_equation()
     def _eval_intrinsic_equations(self):
         id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
@@ -37,4 +34,4 @@ class Theoretical(Cmp):
         h_in = inlet_node.enthalpy()
         h_out = outlet_node.enthalpy()
 
-        return [[h_in / 1000.0, h_out / 1000.0]]
+        return [h_in / 1000.0, h_out / 1000.0]

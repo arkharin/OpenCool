@@ -217,24 +217,15 @@ class Component(ABC, Element):
     def eval_equations(self):
         # Return a matrix of two columns with the calculation result of each side of the equation.
         results = []
-        int_eq = self._eval_intrinsic_equations()
-        if int_eq is not None:
-            for i in int_eq:
-                results.append(i)
-        properties = self.get_basic_properties()
-        for key in properties:
-            results.append(self._eval_basic_equation(key))
+
+        # Intrinsic equations evaluation
+        for func in self._fundamental_eqs:
+            results.append(func())
+        # basic equations evaluation
+        for key in self.get_basic_properties():
+            results.append(self._basic_eqs[key]())
+
         return results
-
-    @abstractmethod
-    def _eval_intrinsic_equations(self):
-        # Return list of list with pairs of the calculations of each side of the equations.
-        pass
-
-    @abstractmethod
-    def _eval_basic_equation(self, key_basic_property):
-        # Return list with the calculations of each side of the equation. Only one equation for each key_basic_property.
-        pass
 
     # General methods:
     def get_id_input_properties(self):
