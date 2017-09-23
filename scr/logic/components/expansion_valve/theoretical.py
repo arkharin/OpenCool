@@ -20,9 +20,6 @@ class Theoretical(Cmp):
     def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
-    def calculated_result(self, key):
-        return None
-
     """ Fundamental properties equations """
     @fundamental_equation()
     # function name can be arbitrary. Return a single vector with each side of the equation evaluated.

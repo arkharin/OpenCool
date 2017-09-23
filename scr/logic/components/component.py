@@ -122,7 +122,7 @@ class Component(ABC, Element):
         self._basic_properties = {}
         self._auxiliary_properties = {}
         self._basic_properties_results = {}
-        self._optional_properties_results = {}
+        self._auxiliary_properties_results = {}
 
         # Create and register the properties and equations. The only use is for register equations functions.
         self._fundamental_eqs = []
@@ -192,29 +192,6 @@ class Component(ABC, Element):
         class_ = getattr(cmp, class_name)
         return class_(name, id_, component_type, inlet_nodes_id, outlet_nodes_id, component_data)
 
-    @abstractmethod
-    def calculated_result(self, key):
-        # Calculated the result of the key. Return PropertyNameError if key doesn't exist.
-
-        # TODO change to get_property. Problem, now I have get_xxx_properties for the solver and  presolver. Maybe rename for better name.
-        # Return a list with length 2. In first position the name of the property calculated and in the second de value.
-        # Return None if is empty
-
-        pass
-
-    def add_property_result(self, key, value):
-        if key in self.get_basic_properties():
-            if key in self._basic_properties_results:
-                raise ComponentWarning('%s property is already calculated. Value is overwritten' % key)
-            self._basic_properties_results[key] = self.calculated_result(key)
-
-        elif key in self.get_optional_properties():
-            if key in self._optional_properties_results:
-                raise ComponentWarning('%s property is already calculated. Value is overwritten' % key)
-            self._optional_properties_results[key] = value
-        else:
-            raise ComponentWarning('%s property is not allowed in %s component' % (key, self.get_component_info().get_component_type()))
-
     def eval_equations(self):
         # Return a matrix of two columns with the calculation result of each side of the equation.
         results = []
@@ -229,6 +206,15 @@ class Component(ABC, Element):
             results.append([self.get_property(key), self._basic_eqs[key]()])
 
         return results
+
+    def solve_property(self, key):
+        if key in self.get_basic_properties():
+            self._basic_properties_results[key] = self._basic_eqs[key]()
+        elif key in self.get_optional_properties():
+            self._auxiliary_properties_results[key] = self._auxiliary_eqs[key]()
+        else:
+            raise ComponentWarning('%s property is not allowed in %s component' % (key, self.get_component_info().get_component_type()))
+
 
     # General methods:
     def get_id_input_properties(self):
@@ -249,7 +235,7 @@ class Component(ABC, Element):
 
     def get_optional_properties_results(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
-        return self._optional_properties_results
+        return self._auxiliary_properties_results
 
     def get_property(self, key):
         return getattr(self, key)

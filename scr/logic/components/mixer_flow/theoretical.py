@@ -46,16 +46,6 @@ class Theoretical(Cmp):
         p_out = outlet_node.pressure()
         return (p_in - p_out) / 1000.0
 
-    def calculated_result(self, key):
-        if key == self.PRESSURE_LOSE_1:
-            return self._eval_pressure_lose_1()
-
-        elif key == self.PRESSURE_LOSE_2:
-            return self._eval_pressure_lose_2()
-
-        else:
-            raise PropertyNameError("Invalid property. %s  is not in %s]" % key)
-
     @fundamental_equation()
     def _eval_intrinsic_equations_enthalpy(self):
         id_inlet_nodes = list(self.get_id_inlet_nodes())

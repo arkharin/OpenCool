@@ -50,4 +50,4 @@ class Postsolver_v01(PostSolver):
 
     def _calculate_properties(self, cmp, properties):
         for key in properties:
-            cmp.add_property_result(key, cmp.calculated_result(key))
+            cmp.solve_property(key)

@@ -91,20 +91,3 @@ class Theoretical(Cmp):
         # attributes have been transformed to instance attributes
         # and primitive types ;)
         return mass_flow * density / self.volumetric_efficiency
-
-    def calculated_result(self, key):
-        if key == self.ISENTROPIC_EFFICIENCY:
-            return self._eval_eq_isentropic_efficiency()
-
-        elif key == self.POWER_CONSUMPTION:
-            return self._eval_eq_power_consumption()
-
-        elif key == self.VOLUMETRIC_EFFICIENCY:
-            return self._eval_eq_volumetric_efficiency()
-
-        elif key == self.DISPLACEMENT_VOLUME:
-            return self._eval_eq_displacement_volume()
-
-        else:
-            return PropertyNameError(
-                "Invalid property. %s  is not in %s]" % key)

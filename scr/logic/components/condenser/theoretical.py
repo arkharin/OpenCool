@@ -67,18 +67,3 @@ class Theoretical(Cmp):
         p_in = inlet_node.pressure()
         p_out = outlet_node.pressure()
         return (p_in - p_out) / 1000.0
-
-    def calculated_result(self, key):
-        if key == self.HEATING_POWER:
-            return self._eval_heating_power()
-
-        elif key == self.SATURATION_TEMPERATURE:
-            return self._eval_saturation_temperature()
-
-        elif key == self.SUBCOOLING:
-            return self._eval_subcooling()
-
-        elif key == self.PRESSURE_LOSE:
-            return self._eval_pressure_loss()
-        else:
-            raise PropertyNameError("Invalid property. %s  is not in %s]" % key)
