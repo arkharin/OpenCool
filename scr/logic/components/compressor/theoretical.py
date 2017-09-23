@@ -20,7 +20,9 @@ def update_saved_data_to_last_version(orig_data, orig_version):
 
 
 # Template:
-# @component(key name, version, function to update from old versions)
+# @component(key name, version, function to update from old versions, number of inlet nodes, number of outlet nodes)
+# The default arguments are @component(key, version, updater_data_func= None, inlet_nodes= 1, outlet_nodes= 1)
+
 # key_name is unique
 @component('isentropic_compressor', Cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
 class Theoretical(Cmp):

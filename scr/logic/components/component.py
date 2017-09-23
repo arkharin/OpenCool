@@ -24,7 +24,7 @@ from scr.helpers.singleton import Singleton
 # variables and are share between instances
 
 
-def component(key, component_type, version=1, updater_data_func=None):
+def component(key, component_type, version=1, updater_data_func=None, inlet_nodes=1, outlet_nodes=1):
     def real_decorator(cls):
         """ updater_data_func is only required if version is bigger than 1"""
         if not issubclass(cls, Component):
@@ -34,7 +34,8 @@ def component(key, component_type, version=1, updater_data_func=None):
             raise ValueError('updater_func must be distinct to None if version is not one')
 
         cmp_info = ComponentInfo(key, cls, component_type, component_version=version,
-                                 updater_data_func=updater_data_func)
+                                 updater_data_func=updater_data_func, inlet_nodes=inlet_nodes,
+                                 outlet_nodes=outlet_nodes)
 
         # Search those functions in the class that has been decorated with *_property decorator and add info in
         # to component info
@@ -328,17 +329,9 @@ class ComponentBuilder:
         self._id = id_
         self._component_type = StrRestricted(component_type)
         self._component_data = {}
-
-        # TODO This code is temporal. Components must provide information about the inlet and outlet nodes required.
-        if component_type == Component.SEPARATOR_FLOW:
-            self._inlet_nodes_id = [None] * 1
-            self._outlet_nodes_id = [None] * 2
-        elif component_type == Component.MIXER_FLOW:
-            self._inlet_nodes_id = [None] * 2
-            self._outlet_nodes_id = [None] * 1
-        else:
-            self._inlet_nodes_id = [None] * 1
-            self._outlet_nodes_id = [None] * 1
+        self._component_info = ComponentInfoFactory().get(self.get_component_type())
+        self._inlet_nodes_id = [None] * self._component_info.get_inlet_nodes()
+        self._outlet_nodes_id = [None] * self._component_info.get_outlet_nodes()
 
     def build(self):
         # Build the component
@@ -458,14 +451,16 @@ class ComponentFactory(metaclass=Singleton):
 
 
 class ComponentInfo:
-    def __init__(self, component_key, component_class, component_type, component_version=1, updater_data_func=None):
+    def __init__(self, component_key, component_class, component_type, component_version=1, updater_data_func=None,
+                 inlet_nodes=1, outlet_nodes=1):
         self._component_key = component_key
         self._component_class = component_class
         self._component_type = component_type
         self._parent_component_class = inspect.getmro(component_class)[1]  # Parent class
         self._component_version = component_version
-        self.updater_data_func = updater_data_func
-
+        self._updater_data_func = updater_data_func
+        self._inlet_nodes = inlet_nodes
+        self._outlet_nodes = outlet_nodes
         # Properties info
         self._basic_properties_info = {}
         self._auxiliary_properties_info = {}
@@ -492,7 +487,7 @@ class ComponentInfo:
         return {**self.get_basic_properties(), **self.get_auxiliary_properties()}
 
     def get_updater_data_func(self):
-        return self.updater_data_func
+        return self._updater_data_func
 
     def get_version(self):
         return self._component_version
@@ -509,6 +504,12 @@ class ComponentInfo:
 
     def get_component_type(self):
         return self._component_type
+
+    def get_inlet_nodes(self):
+        return self._inlet_nodes
+
+    def get_outlet_nodes(self):
+        return self._outlet_nodes
 
 
 class ComponentInfoFactory(metaclass=Singleton):
