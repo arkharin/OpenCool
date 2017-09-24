@@ -8,7 +8,6 @@ Define the abstract class component.
 import inspect
 from abc import ABC
 from scr.helpers.properties import StrRestricted
-from scr.logic.base_classes import Element
 from scr.logic.errors import ComponentBuilderError, DeserializerError, PropertyNameError
 from scr.logic.warnings import ComponentBuilderWarning, ComponentWarning
 from scr.helpers.singleton import Singleton
@@ -100,11 +99,10 @@ def auxiliary_property(**kwargs):
 ''' End of the decorators to use in component plugins to register them in ComponentFactory and ComponentInfoFactory '''
 
 
-class Component(ABC, Element):
-    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+class Component(ABC):
+    def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
 
-        super().__init__(name, id_)
-
+        self._id = id_
         self._inlet_nodes = inlet_nodes_id
         self._outlet_nodes = outlet_nodes_id
         self._basic_properties = {}
@@ -188,6 +186,9 @@ class Component(ABC, Element):
                                                                                    get_component_type()))
 
     # General methods:
+    def get_id(self):
+        return self._id
+
     def get_basic_properties(self):
         # Return an array of dictionaries. Each dictionary in the format of example output components to interface.
         return self._basic_properties
@@ -250,7 +251,6 @@ class AComponentSerializer(ABC):
     COMPONENT_TYPE = 'type'
     IDENTIFIER = 'id'
     INLET_NODES = 'inlet nodes'
-    NAME = 'name'
     NODES = 'nodes'
     AUXILIARY_PROPERTIES = 'auxiliary properties'
     AUXILIARY_PROPERTIES_SOLVED = 'auxiliary properties solved'
@@ -272,7 +272,6 @@ class AComponentSerializer(ABC):
             raise DeserializerError('The version of component ' + self.IDENTIFIER +
                                     ' is greater than component in library. Version ' + str(cmp_version) + ' vs ' +
                                     str(component_version))
-        cmp.set_name(cmp_data[self.NAME])
         i = 0
         for node_id in cmp_data[self.INLET_NODES]:
             cmp.add_inlet_node(i, node_id)
@@ -289,7 +288,7 @@ class AComponentSerializer(ABC):
         return cmp
 
     def serialize(self, component):
-        cmp_serialized = {self.NAME: component.get_name(), self.IDENTIFIER: component.get_id()}
+        cmp_serialized = {self.IDENTIFIER: component.get_id()}
         cmp_serialized[self.VERSION] = component.get_component_info().get_version()
         cmp_serialized[self.COMPONENT_TYPE] = component.get_component_info().get_component_key()
         cmp_serialized[self.INLET_NODES] = component.get_id_inlet_nodes()
@@ -311,7 +310,6 @@ class AComponentSerializer(ABC):
 
 class ComponentBuilder:
     def __init__(self, id_, component_type):
-        self._name = None
         self._id = id_
         self._component_type = StrRestricted(component_type)
         self._component_data = {}
@@ -321,8 +319,6 @@ class ComponentBuilder:
 
     def build(self):
         # Build the component
-        if self._name is None:
-            raise ComponentBuilderWarning('Component %s has no name', self.get_id())
         # Check that all nodes are connected
         if None in self._inlet_nodes_id:
             raise ComponentBuilderError('Missing nodes attached to the inlet of the component %s.', self.get_id())
@@ -330,11 +326,8 @@ class ComponentBuilder:
         if None in self._outlet_nodes_id:
             raise ComponentBuilderError('Missing nodes attached to the outlet of the component %s.', self.get_id())
 
-        return ComponentFactory().create(self.get_component_type(), self._name, self._id, self._inlet_nodes_id,
+        return ComponentFactory().create(self.get_component_type(), self._id, self._inlet_nodes_id,
                                          self._outlet_nodes_id, self._component_data)
-
-    def set_name(self, name):
-        self._name = StrRestricted(name)
 
     def get_id(self):
         return self._id

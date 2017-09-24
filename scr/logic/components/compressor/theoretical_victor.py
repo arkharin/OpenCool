@@ -27,8 +27,8 @@ class Theoretical_victor(Cmp):
     POWER_CONSUMPTION = 'power_consumption'
     VOLUMETRIC_EFFICIENCY = 'volumetric_efficiency'
 
-    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
+    def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     """ Fundamental properties equations """
 

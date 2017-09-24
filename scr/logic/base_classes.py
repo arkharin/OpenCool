@@ -26,16 +26,3 @@ class Identifier:
             raise IdDuplicatedError('This id %s is already in use', id_)
         else:
             self._forbidden_id.append(id_)
-
-
-class Element:
-    def __init__(self, name, identifier):
-        self._name = name.get()
-        check_input_int(identifier, lower_limit=0)
-        self._id = identifier
-
-    def get_name(self):
-        return self._name
-
-    def get_id(self):
-        return self._id

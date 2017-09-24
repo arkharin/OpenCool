@@ -24,8 +24,8 @@ class Theoretical(Cmp):
     SATURATION_TEMPERATURE = 'saturation_temperature'
     SUPERHEATING = 'superheating'
 
-    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
+    def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     @basic_property(cooling_power=NumericProperty(0, inf, unit='kW'))
     def _eval_cooling_power(self):
