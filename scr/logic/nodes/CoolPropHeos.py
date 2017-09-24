@@ -26,8 +26,8 @@ class CoolPropHeos(Node):
     def get_value_property_base_2(self):
         return self.density()
 
-    def is_init(self):
-        if self._temperature is self.NO_INIT and self._density is self.NO_INIT:
+    def are_base_properties_init(self):
+        if self._temperature is None and self._density is None:
             return False
         else:
             return True

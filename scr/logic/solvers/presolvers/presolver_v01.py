@@ -119,7 +119,7 @@ class Presolver_v01 (PreSolver):
             nodes = component.get_inlet_nodes()
         for i in nodes:
             node = nodes[i]
-            if not node.is_init():
+            if not node.are_base_properties_init():
                 node.update_node_values(property_node_type_1, property_1, property_node_type_2, property_2)
                 next_components = node.get_components_attached()
                 for next_component in next_components:

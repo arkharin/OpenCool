@@ -8,22 +8,19 @@ Define the abstract class node.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
-from scr.helpers.properties import StrRestricted
 from scr.logic.errors import PropertyNameError, BuildError
 from scr.logic.warnings import NodeBuilderWarning
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
 
 class Node(ABC):
-    IDENTIFIER = 'id'
-    # Thermodynamic properties
+    # Thermodynamic properties. All units in SI.
     DENSITY = Refrigerant.DENSITY
     ENTROPY = Refrigerant.ENTROPY
     ENTHALPY = Refrigerant.ENTHALPY
     QUALITY = Refrigerant.QUALITY
     PRESSURE = Refrigerant.PRESSURE
     TEMPERATURE = Refrigerant.TEMPERATURE
-    NO_INIT = None
 
     def __init__(self, id_, components_id, refrigerant_object):
         self._id = id_
@@ -31,15 +28,15 @@ class Node(ABC):
         self._outlet_component_attached = None
         self._attach_components_id = components_id
         self._refrigerant = refrigerant_object
-        self._id_mass_flow = self.NO_INIT
-        self._mass_flow = self.NO_INIT
+        self._id_mass_flow = None
+        self._mass_flow = None
         # Thermodynamic properties
-        self._density = self.NO_INIT
-        self._enthalpy = self.NO_INIT
-        self._entropy = self.NO_INIT
-        self._quality = self.NO_INIT
-        self._pressure = self.NO_INIT
-        self._temperature = self.NO_INIT
+        self._density = None
+        self._enthalpy = None
+        self._entropy = None
+        self._quality = None
+        self._pressure = None
+        self._temperature = None
 
     def configure(self, components_dict, mass_flows):
         for component_id in self.get_id_attach_components():
@@ -100,11 +97,11 @@ class Node(ABC):
         return [self.get_inlet_component_attached(), self.get_outlet_component_attached()]
 
     def get_inlet_component_attached(self):
-        # Return a list with all components with this node as inlet node
+        # Return the component with this node as inlet node
         return self._inlet_component_attached
 
     def get_outlet_component_attached(self):
-        # Return a list with all components with this node as outlet node
+        # Return the components with this node as outlet node
         return self._outlet_component_attached
 
     def get_id_attach_components(self):
@@ -115,26 +112,31 @@ class Node(ABC):
 
     @abstractmethod
     def get_type_property_base_1(self):
+        # Define the first physical property needed to define a thermodynamic point.
         pass
 
     @abstractmethod
     def get_type_property_base_2(self):
+        # Define the second physical property needed to define a thermodynamic point.
         pass
 
     @abstractmethod
     def get_value_property_base_1(self):
+        # It's a pointer to the method to calculated the first physical property needed to define the node.
         pass
 
     @abstractmethod
     def get_value_property_base_2(self):
+        # It's a pointer to the method to calculated the second physical property needed to define the node.
         pass
 
     @abstractmethod
-    def is_init(self):
+    def are_base_properties_init(self):
+        # Check if the base physical properties are calculated or not.
         pass
 
     def is_mass_flow_init(self):
-        if self._id_mass_flow is not self.NO_INIT:
+        if self._id_mass_flow is not None:
             return True
         else:
             return False
@@ -143,52 +145,52 @@ class Node(ABC):
         self._id_mass_flow = id_mass_flow
 
     def pressure(self):
-        if self._pressure is self.NO_INIT:
+        if self._pressure is None:
             self._pressure = self._refrigerant.p(self.get_type_property_base_1(), self.get_value_property_base_1(),
                                                  self.get_type_property_base_2(), self.get_value_property_base_2())
         return self._pressure
 
     def temperature(self):
-        if self._temperature is self.NO_INIT:
+        if self._temperature is None:
             self._temperature = self._refrigerant.T(self.get_type_property_base_1(), self.get_value_property_base_1(),
                                                     self.get_type_property_base_2(), self.get_value_property_base_2())
         return self._temperature
 
     def density(self):
-        if self._density is self.NO_INIT:
+        if self._density is None:
             self._density = self._refrigerant.d(self.get_type_property_base_1(), self.get_value_property_base_1(),
                                                 self.get_type_property_base_2(), self.get_value_property_base_2())
         return self._density
 
     def enthalpy(self):
-        if self._enthalpy is self.NO_INIT:
+        if self._enthalpy is None:
             self._enthalpy = self._refrigerant.h(self.get_type_property_base_1(), self.get_value_property_base_1(),
                                                  self.get_type_property_base_2(), self.get_value_property_base_2())
         return self._enthalpy
 
     def entropy(self):
-        if self._entropy is self.NO_INIT:
+        if self._entropy is None:
             self._entropy = self._refrigerant.s(self.get_type_property_base_1(), self.get_value_property_base_1(),
                                                 self.get_type_property_base_2(), self.get_value_property_base_2())
         return self._entropy
 
-    def mass_flow(self):
-        return self._mass_flow[self._id_mass_flow]
-
     def quality(self):
-        if self._quality is self.NO_INIT:
+        if self._quality is None:
             self._quality = self._refrigerant.Q(self.get_type_property_base_1(), self.get_value_property_base_1(),
                                                 self.get_type_property_base_2(), self.get_value_property_base_2())
         return self._quality
 
+    def mass_flow(self):
+        return self._mass_flow[self._id_mass_flow]
+
     def update_node_values(self, property_type_1, property_1, property_type_2, property_2):
-        # Thermodynamic properties
-        self._density = self.NO_INIT
-        self._enthalpy = self.NO_INIT
-        self._entropy = self.NO_INIT
-        self._quality = self.NO_INIT
-        self._pressure = self.NO_INIT
-        self._temperature = self.NO_INIT
+        # Erase the all properties calculated and updated the node with new thermodynamic properties.
+        self._density = None
+        self._enthalpy = None
+        self._entropy = None
+        self._quality = None
+        self._pressure = None
+        self._temperature = None
 
         self._set_property(property_type_1, property_1)
         self._set_property(property_type_2, property_2)
@@ -224,7 +226,6 @@ class ANodeSerializer:
 
 
 class NodeBuilder:
-    # TODO check if builder check all input data.
     def __init__(self, id_, component_id_1, component_id_2):
         self._id = id_
         self._components_id = [component_id_1, component_id_2]
@@ -255,7 +256,7 @@ class NodeBuilder:
         if component_id not in self._components_id:
             self._components_id.append(component_id)
         else:
-            raise NodeBuilderWarning('This component is already attached at this node')
+            raise NodeBuilderWarning('Component' + component_id + ' is already attached at the node ' + self.get_id())
 
     def remove_component(self, component_id):
         try:
