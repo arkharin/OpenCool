@@ -8,8 +8,8 @@ Define the Compressor component.
 from math import inf
 
 from scr.logic.components.component import Component as Cmp
-from scr.logic.components.component import component, fundamental_equation, basic_property, auxiliary_property
-from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import ComponentInfo as CmpInfo
+from scr.logic.components.component import component, basic_property, auxiliary_property
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
 from scr.helpers.properties import NumericProperty
@@ -20,7 +20,7 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_compressor', Cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
+@component('theoretical_compressor', CmpInfo.COMPRESSOR, 1, update_saved_data_to_last_version)
 class Theoretical_victor(Cmp):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'

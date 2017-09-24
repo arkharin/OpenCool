@@ -9,15 +9,15 @@ Presolver for simple circuit
 
 from scr.logic.solvers.presolvers.presolver import PreSolver
 import scr.logic.nodes.node as nd
-from scr.logic.components.component import Component
+from scr.logic.components.component import ComponentInfo as CmpInfo
 import scr.logic.components.condenser.theoretical as Condenser
 import scr.logic.components.evaporator.theoretical as Evaporator
 from scr.logic.errors import TypeComponentError
 
-COMPRESSOR = Component.COMPRESSOR
-CONDENSER = Component.CONDENSER
-EVAPORATOR = Component.EVAPORATOR
-EXPANSION_VALVE = Component.EXPANSION_VALVE
+COMPRESSOR = CmpInfo.COMPRESSOR
+CONDENSER = CmpInfo.CONDENSER
+EVAPORATOR = CmpInfo.EVAPORATOR
+EXPANSION_VALVE = CmpInfo.EXPANSION_VALVE
 
 
 class Presolver_v01 (PreSolver):

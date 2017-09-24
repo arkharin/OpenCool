@@ -60,13 +60,13 @@ class Circuit(Element):
         self._link_nodes_mass_flows()
 
     def _create_mass_flows(self):
-        separate_components = self.search_components_by_type(cmp.Component.SEPARATOR_FLOW)
+        separate_components = self.search_components_by_type(cmp.ComponentInfo.SEPARATOR_FLOW)
         return [0.0] * (2 * len(separate_components) + 1)
 
     def _link_nodes_mass_flows(self):
         # Search components that modify flows
-        mix_components = self.search_components_by_type(cmp.Component.MIXER_FLOW)
-        separate_components = self.search_components_by_type(cmp.Component.SEPARATOR_FLOW)
+        mix_components = self.search_components_by_type(cmp.ComponentInfo.MIXER_FLOW)
+        separate_components = self.search_components_by_type(cmp.ComponentInfo.SEPARATOR_FLOW)
         flow_components = {**separate_components, **mix_components}
         # Create and fill id_mass_flow in nodes.
         if len(flow_components) == 0:
@@ -225,6 +225,7 @@ class ACircuitSerializer:
 
 
 class CircuitBuilder:
+    # TODO check if builder check all input data.
     def __init__(self, id_):
         self._name = None
         self._id = id_
@@ -317,7 +318,7 @@ class CircuitBuilder:
 
     def remove_node(self, rm_node):
         rm_node_id = rm_node.get_id()
-        # Check the node is not use in nodes
+        # Check the node is not use in components
         attached_components = rm_node.get_components_id()
         for component_id in attached_components:
             component = self.get_component(component_id)

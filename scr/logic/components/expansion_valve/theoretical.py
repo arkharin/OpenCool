@@ -7,6 +7,7 @@ Define the Expansion Valve component.
 """
 
 from scr.logic.components.component import Component as Cmp
+from scr.logic.components.component import ComponentInfo as CmpInfo
 from scr.logic.components.component import component, fundamental_equation
 
 
@@ -14,7 +15,7 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_expansion_valve', Cmp.EXPANSION_VALVE, 1, update_saved_data_to_last_version)
+@component('theoretical_expansion_valve', CmpInfo.EXPANSION_VALVE, 1, update_saved_data_to_last_version)
 class Theoretical(Cmp):
 
     def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):

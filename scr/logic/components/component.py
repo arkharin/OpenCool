@@ -11,7 +11,6 @@ from scr.helpers.properties import StrRestricted
 from scr.logic.base_classes import Element
 from scr.logic.errors import ComponentBuilderError, DeserializerError, PropertyNameError
 from scr.logic.warnings import ComponentBuilderWarning, ComponentWarning
-from importlib import import_module
 from scr.helpers.singleton import Singleton
 
 ''' Decorators to use in component plugins to register them in ComponentFactory and ComponentInfoFactory '''
@@ -102,18 +101,6 @@ def auxiliary_property(**kwargs):
 
 
 class Component(ABC, Element):
-    # Arbritary value to check used to check if super method is called in _register_xxx_property_eq() methods
-    # TODO pasar a component info
-    # Main types
-    COMPRESSOR = 'compressor'
-    EXPANSION_VALVE = 'expansion_valve'
-    CONDENSER = 'condenser'
-    EVAPORATOR = 'evaporator'
-    MIXER_FLOW = 'mixer_flow'  # N outlets but only 1 inlet
-    SEPARATOR_FLOW = 'separator_flow'  # Only 1 outlet and N inlets
-    TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
-    OTHER = 'other'
-
     def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
 
         super().__init__(name, id_)
@@ -258,7 +245,7 @@ class Component(ABC, Element):
 class AComponentSerializer(ABC):
     # Parameters
     BASIC_PROPERTIES = 'basic properties'
-    BASIC_PROPERTIES_CALCULATED = 'basic properties calculate'
+    BASIC_PROPERTIES_SOLVED = 'basic properties solved'
     COMPONENTS = 'components'
     COMPONENT_TYPE = 'type'
     IDENTIFIER = 'id'
@@ -266,7 +253,7 @@ class AComponentSerializer(ABC):
     NAME = 'name'
     NODES = 'nodes'
     AUXILIARY_PROPERTIES = 'auxiliary properties'
-    AUXILIARY_PROPERTIES_CALCULATED = 'auxiliary properties calculate'
+    AUXILIARY_PROPERTIES_SOLVED = 'auxiliary properties solved'
     OUTLET_NODES = 'outlet nodes'
     VERSION = 'version'
 
@@ -308,11 +295,11 @@ class AComponentSerializer(ABC):
         cmp_serialized[self.INLET_NODES] = component.get_id_inlet_nodes()
         cmp_serialized[self.OUTLET_NODES] = component.get_id_outlet_nodes()
         self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES, component.get_basic_properties())
-        self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES_CALCULATED,
+        self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES_SOLVED,
                                    component.get_basic_properties_results())
         self._serialize_properties(cmp_serialized, self.AUXILIARY_PROPERTIES,
                                    component.get_auxiliary_properties())
-        self._serialize_properties(cmp_serialized, self.AUXILIARY_PROPERTIES_CALCULATED,
+        self._serialize_properties(cmp_serialized, self.AUXILIARY_PROPERTIES_SOLVED,
                                    component.get_auxiliary_properties_results())
         return cmp_serialized
 
@@ -458,6 +445,16 @@ class ComponentFactory(metaclass=Singleton):
 
 
 class ComponentInfo:
+    # Main types
+    COMPRESSOR = 'compressor'
+    EXPANSION_VALVE = 'expansion_valve'
+    CONDENSER = 'condenser'
+    EVAPORATOR = 'evaporator'
+    MIXER_FLOW = 'mixer_flow'  # N outlets but only 1 inlet
+    SEPARATOR_FLOW = 'separator_flow'  # Only 1 outlet and N inlets
+    TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
+    OTHER = 'other'
+
     def __init__(self, component_key, component_class, component_type, component_version=1, updater_data_func=None,
                  inlet_nodes=1, outlet_nodes=1):
         self._component_key = component_key
@@ -506,9 +503,10 @@ class ComponentInfo:
     def get_version(self):
         return self._component_version
 
-    def get_parent_component_class(self):
-        # Return the parent class. DO NOT WORK with multiple inheritance
-        return inspect.getmro(self._component_class)[1]
+    # Deleted if components of various manufacturers are supported by default.
+    # def get_parent_component_class(self):
+    #     # Return the parent class. DO NOT WORK with multiple inheritance
+    #     return inspect.getmro(self._component_class)[1]
 
     def get_component_class(self):
         return self._component_class
@@ -565,4 +563,5 @@ class ComponentInfoFactory(metaclass=Singleton):
         else:
             raise ValueError('key ' + str(key) + ' is not a registered key in ' + str(type(self)))
 
-            # TODO def get_register_components()
+    def get_registered_components(self):
+        return self._components_info

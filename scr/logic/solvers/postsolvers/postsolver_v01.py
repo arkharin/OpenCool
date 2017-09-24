@@ -13,11 +13,11 @@ from scr.logic.solvers.postsolvers.postsolver import PostSolver
 class Postsolver_v01(PostSolver):
 
     def post_solve(self, circuit):
-        circuit = self._calculate_nodes_solved(circuit)
-        circuit = self._calculated_components(circuit)
+        circuit = self._solve_nodes(circuit)
+        circuit = self._solve_components(circuit)
         return circuit
 
-    def _calculate_nodes_solved(self, circuit):
+    def _solve_nodes(self, circuit):
         nodes = circuit.get_nodes()
         for node in nodes:
             node = nodes[node]
@@ -34,20 +34,20 @@ class Postsolver_v01(PostSolver):
 
         return circuit
 
-    def _calculated_components(self, circuit):
+    def _solve_components(self, circuit):
         components = circuit.get_components()
         for component in components:
             component = components[component]
-            self._calculated_basic_properties(component)
-            self._calculated_auxiliary_properties(component)
+            self._solve_basic_properties(component)
+            self._solve_auxiliary_properties(component)
         return circuit
 
-    def _calculated_basic_properties(self, cmp):
-        self._calculate_properties(cmp, cmp.get_basic_properties())
+    def _solve_basic_properties(self, cmp):
+        self._solve_properties(cmp, cmp.get_basic_properties())
 
-    def _calculated_auxiliary_properties(self, cmp):
-        self._calculate_properties(cmp, cmp.get_auxiliary_properties())
+    def _solve_auxiliary_properties(self, cmp):
+        self._solve_properties(cmp, cmp.get_auxiliary_properties())
 
-    def _calculate_properties(self, cmp, properties):
+    def _solve_properties(self, cmp, properties):
         for key in properties:
             cmp.solve_property(key)

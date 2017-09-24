@@ -225,6 +225,7 @@ class ANodeSerializer:
 
 
 class NodeBuilder:
+    # TODO check if builder check all input data.
     def __init__(self, id_, component_id_1, component_id_2):
         self._name = None
         self._id = id_

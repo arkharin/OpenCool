@@ -7,7 +7,7 @@ Define the Compressor component.
 """
 
 from scr.logic.components.component import Component as Cmp
-from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import ComponentInfo as CmpInfo
 from scr.logic.refrigerants.refrigerant import Refrigerant
 from scr.logic.components.component import component, fundamental_equation, basic_property, auxiliary_property
 from scr.helpers.properties import NumericProperty
@@ -24,7 +24,7 @@ def update_saved_data_to_last_version(orig_data, orig_version):
 # The default arguments are @component(key, version, updater_data_func= None, inlet_nodes= 1, outlet_nodes= 1)
 
 # key_name is unique
-@component('isentropic_compressor', Cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
+@component('isentropic_compressor', CmpInfo.COMPRESSOR, 1, update_saved_data_to_last_version)
 class Theoretical(Cmp):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'

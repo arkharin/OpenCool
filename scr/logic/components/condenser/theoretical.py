@@ -7,7 +7,7 @@ Define the Condenser component.
 """
 
 from scr.logic.components.component import Component as Cmp
-from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import ComponentInfo as CmpInfo
 from scr.logic.components.component import component, basic_property
 from scr.helpers.properties import NumericProperty
 from math import inf
@@ -17,7 +17,7 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_condenser', Cmp.CONDENSER, 1, update_saved_data_to_last_version)
+@component('theoretical_condenser', CmpInfo.CONDENSER, 1, update_saved_data_to_last_version)
 class Theoretical(Cmp):
     HEATING_POWER = 'heating_power'
     PRESSURE_LOSE = 'pressure_lose'
