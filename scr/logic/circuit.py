@@ -286,7 +286,7 @@ class CircuitBuilder:
             if component_id not in components_explored:
                 components_explored.append(component_id)
                 component = self.get_component(component_id)
-                outlet_nodes_id = component.get_outlet_nodes_id().copy()
+                outlet_nodes_id = component.get_outlet_nodes().copy()
                 outlet_node_id = outlet_nodes_id.pop()
                 nodes_to_explore += outlet_nodes_id
                 try:
@@ -341,7 +341,7 @@ class CircuitBuilder:
     def remove_component(self, rm_component):
         rm_component_id = rm_component.get_id()
         # Check that the component is not use in nodes
-        attached_nodes = rm_component.get_nodes_id()
+        attached_nodes = rm_component.get_attached_nodes()
         for node_id in attached_nodes:
             node = self.get_node(node_id)
             node.remove_component(rm_component_id)

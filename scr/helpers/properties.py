@@ -44,8 +44,8 @@ class NumericProperty(Property):
         self._unit = unit
 
     def is_correct(self, value):
-        if self._value is not None:
-            return self._lower_boundary < value < self._upper_boundary
+        if value is not None:
+            return self._lower_boundary <= value <= self._upper_boundary
         else:
             return True
 

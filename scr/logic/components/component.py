@@ -9,7 +9,7 @@ import inspect
 from abc import ABC
 from scr.helpers.properties import StrRestricted
 from scr.logic.base_classes import Element
-from scr.logic.errors import ComponentBuilderError, DeserializerError
+from scr.logic.errors import ComponentBuilderError, DeserializerError, PropertyNameError
 from scr.logic.warnings import ComponentBuilderWarning, ComponentWarning
 from importlib import import_module
 from scr.helpers.singleton import Singleton
@@ -323,7 +323,6 @@ class AComponentSerializer(ABC):
 
 
 class ComponentBuilder:
-    # TODO check if builder check all input data.
     def __init__(self, id_, component_type):
         self._name = None
         self._id = id_
@@ -366,7 +365,7 @@ class ComponentBuilder:
             self._inlet_nodes_id[inlet_pos] = node_id
 
     def remove_inlet_node(self, inlet_pos):
-        # Remove node from inlet position
+        # Remove node from an inlet position. To remove node using node_id use remove_node.
         self._inlet_nodes_id[inlet_pos] = None
 
     def add_outlet_node(self, outlet_pos, node_id):
@@ -377,29 +376,30 @@ class ComponentBuilder:
             self._outlet_nodes_id[outlet_pos] = node_id
             raise ComponentBuilderWarning('This node is already attached to inlet nodes')
         elif node_id in self._outlet_nodes_id:
-
             raise ComponentBuilderWarning('This node is already attached to outlet nodes')
         else:
             self._outlet_nodes_id[outlet_pos] = node_id
 
     def remove_outlet_node(self, outlet_pos):
-        # Remove node from the outlet position
+        # Remove node from an outlet position. To remove node using node_id use remove_node.
         self._outlet_nodes_id[outlet_pos] = None
 
-    def get_outlet_nodes_id(self):
+    def get_outlet_nodes(self):
         # Return a list of outlet nodes id attached to component
         return self._outlet_nodes_id
 
     def remove_node(self, node_id):
         # Remove node from component.
         if node_id in self._inlet_nodes_id:
-            self._inlet_nodes_id.remove(node_id)
+            index = self._inlet_nodes_id.index(node_id)
+            self._inlet_nodes_id[index] = None
         elif node_id in self._outlet_nodes_id:
-            self._outlet_nodes_id.remove(node_id)
+            index = self._outlet_nodes_id.index(node_id)
+            self._outlet_nodes_id[index] = None
         else:
             raise ComponentBuilderWarning('This node is not attached to component')
 
-    def get_nodes_id(self):
+    def get_attached_nodes(self):
         # Return a list of nodes id attached to component
         return self._inlet_nodes_id + self._outlet_nodes_id
 
@@ -407,12 +407,19 @@ class ComponentBuilder:
         return (node_id in self._inlet_nodes_id) or (node_id in self._outlet_nodes_id)
 
     def set_attribute(self, attribute_name, value):
-        # TODO check if exist and the value is numeric
-        self._component_data[attribute_name] = value
+        if attribute_name in self._component_info.get_properties():
+            cmp_property = self._component_info.get_property(attribute_name)
+            if cmp_property.is_correct(value):
+                self._component_data[attribute_name] = value
+            else:
+                component_key = self._component_info.get_component_key()
+                raise ComponentBuilderError('In ' + component_key + ', ' + attribute_name + ' can\'t be ' + str(value))
 
     def remove_attribute(self, attribute_name):
         if attribute_name in self._component_data:
             del self._component_data[attribute_name]
+        else:
+            raise ComponentBuilderWarning('Component ' + self._id + 'doesn\'t have' + str(attribute_name))
 
     def get_component_type(self):
         return self._component_type.get()
@@ -482,6 +489,13 @@ class ComponentInfo:
 
     def get_auxiliary_properties(self):
         return self._auxiliary_properties_info
+
+    def get_property(self, property_name):
+        properties = self.get_properties()
+        if property_name in properties:
+            return properties[property_name]
+        else:
+            raise PropertyNameError('Property ' + str(property_name) + ' is not possible in ' + str(type(self)))
 
     def get_properties(self):
         return {**self.get_basic_properties(), **self.get_auxiliary_properties()}
