@@ -6,7 +6,7 @@
 Define the Separator Flow component.
 """
 from scr.logic.components.component import Component as Cmp
-from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import ComponentInfo as CmpInfo
 from scr.logic.components.component import component, fundamental_equation, basic_property
 from scr.helpers.properties import NumericProperty
 from math import inf
@@ -16,7 +16,8 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_separator_flow', Cmp.SEPARATOR_FLOW, 1, update_saved_data_to_last_version)
+@component('theoretical_separator_flow', CmpInfo.SEPARATOR_FLOW, 1, update_saved_data_to_last_version, inlet_nodes=1,
+           outlet_nodes=1)
 class Theoretical(Cmp):
     PRESSURE_LOSE_1 = 'pressure lose inlet - outlet 1'
     PRESSURE_LOSE_2 = 'pressure lose inlet - outlet 2'

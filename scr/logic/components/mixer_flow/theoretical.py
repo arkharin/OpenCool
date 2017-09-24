@@ -6,7 +6,7 @@
 Define the Mixer Flow component.
 """
 from scr.logic.components.component import Component as Cmp
-from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import ComponentInfo as CmpInfo
 from scr.logic.components.component import component, fundamental_equation, basic_property
 from scr.helpers.properties import NumericProperty
 from math import inf
@@ -16,7 +16,8 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_mixer_flow', Cmp.MIXER_FLOW, 1, update_saved_data_to_last_version)
+@component('theoretical_mixer_flow', CmpInfo.MIXER_FLOW, 1, update_saved_data_to_last_version, inlet_nodes=1,
+           outlet_nodes=1)
 class Theoretical(Cmp):
     PRESSURE_LOSE_1 = 'pressure lose inlet 1 - outlet'
     PRESSURE_LOSE_2 = 'pressure lose inlet 2 - outlet'
@@ -35,7 +36,7 @@ class Theoretical(Cmp):
         p_out = outlet_node.pressure()
         return (p_in - p_out) / 1000.0
 
-    @basic_property(pressure_lose_2= NumericProperty(0, inf, unit='kPa'))
+    @basic_property(pressure_lose_2=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose_2(self):
         id_inlet_nodes = self.get_id_inlet_nodes()
         id_outlet_node = self.get_id_outlet_nodes()[0]

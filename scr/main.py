@@ -62,7 +62,7 @@ input_circuit = {'name': 'circuit 1', 'id': 1, 'refrigerant': 'R134A', 'refriger
 #load_circuit = load('input_circuit builder_victor', 'OpenCool circuits')
 #load_circuit = load('input_circuit builder', 'OpenCool circuits')
 
-load_circuit = load('circuit_solved builder v2', 'OpenCool circuits')
+load_circuit = load('circuit_solved builder', 'OpenCool circuits')
 ser = circ.ACircuitSerializer()
 circuit = ser.deserialize(load_circuit)
 print("circuit deserilize succesfully")

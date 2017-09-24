@@ -9,14 +9,12 @@ Define the abstract class node.
 from abc import ABC, abstractmethod
 from importlib import import_module
 from scr.helpers.properties import StrRestricted
-from scr.logic.base_classes import Element
 from scr.logic.errors import PropertyNameError, BuildError
 from scr.logic.warnings import NodeBuilderWarning
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
 
-class Node(ABC, Element):
-    NAME = 'name'
+class Node(ABC):
     IDENTIFIER = 'id'
     # Thermodynamic properties
     DENSITY = Refrigerant.DENSITY
@@ -27,8 +25,8 @@ class Node(ABC, Element):
     TEMPERATURE = Refrigerant.TEMPERATURE
     NO_INIT = None
 
-    def __init__(self, name, id_, components_id, refrigerant_object):
-        super().__init__(name, id_)
+    def __init__(self, id_, components_id, refrigerant_object):
+        self._id = id_
         self._inlet_component_attached = None
         self._outlet_component_attached = None
         self._attach_components_id = components_id
@@ -93,6 +91,9 @@ class Node(ABC, Element):
     @abstractmethod
     def _set_value_property_base_2(self, property_type_1, property_1, property_type_2, property_2):
         pass
+
+    def get_id(self):
+        return self._id
 
     def get_components_attached(self):
         # Return a list of attached components.
@@ -196,7 +197,6 @@ class Node(ABC, Element):
 
 
 class ANodeSerializer:
-    NAME = 'name'
     IDENTIFIER = 'id'
     COMPONENTS = 'components'
     UNIT = 'Units'
@@ -206,11 +206,10 @@ class ANodeSerializer:
 
     def deserialize(self, node_file):
         node = NodeBuilder(node_file[self.IDENTIFIER], node_file[self.COMPONENTS][0], node_file[self.COMPONENTS][1])
-        node.set_name(node_file[self.NAME])
         return node
 
     def serialize(self, node):
-        return {self.NAME: node.get_name(), self.IDENTIFIER: node.get_id(), self.UNIT: 'All units in SI',
+        return {self.IDENTIFIER: node.get_id(), self.UNIT: 'All units in SI',
                 'Results': self._get_properties(node), self.COMPONENTS: node.get_id_attach_components()}
 
     def _get_properties(self, node):
@@ -225,18 +224,16 @@ class ANodeSerializer:
 
 
 class NodeBuilder:
+    # TODO check if builder check all input data.
     def __init__(self, id_, component_id_1, component_id_2):
-        self._name = None
         self._id = id_
         self._components_id = [component_id_1, component_id_2]
 
     def build(self, refrigerant_object, ref_lib):
         # Return a node object.
-        if self._name is None:
-            raise NodeBuilderWarning('Node %s has no name', self.get_id())
         # Check if node have two components attached.
         if len(self._components_id) != 2:
-            raise BuildError('Node %s has %s components attached', (self._name, len(self._components_id)))
+            raise BuildError('Node %s has %s components attached', (self.get_id(), len(self._components_id)))
 
         # Dynamic importing modules
         try:
@@ -249,10 +246,7 @@ class NodeBuilder:
         # Only capitalize the first letter
         class_name = class_name.replace(class_name[0], class_name[0].upper(), 1)
         class_ = getattr(nd, class_name)
-        return class_(self._name, self._id, self._components_id, refrigerant_object)
-
-    def set_name(self, name):
-        self._name = StrRestricted(name)
+        return class_(self._id, self._components_id, refrigerant_object)
 
     def get_id(self):
         return self._id

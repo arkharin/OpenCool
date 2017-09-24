@@ -8,8 +8,8 @@ Define the Compressor component.
 from math import inf
 
 from scr.logic.components.component import Component as Cmp
-from scr.logic.components.component import component, fundamental_equation, basic_property, auxiliary_property
-from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import ComponentInfo as CmpInfo
+from scr.logic.components.component import component, basic_property, auxiliary_property
 from scr.logic.refrigerants.refrigerant import Refrigerant
 
 from scr.helpers.properties import NumericProperty
@@ -20,15 +20,15 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_compressor', Cmp.COMPRESSOR, 1, update_saved_data_to_last_version)
+@component('theoretical_compressor', CmpInfo.COMPRESSOR, 1, update_saved_data_to_last_version)
 class Theoretical_victor(Cmp):
     DISPLACEMENT_VOLUME = 'displacement_volume'
     ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'
     POWER_CONSUMPTION = 'power_consumption'
     VOLUMETRIC_EFFICIENCY = 'volumetric_efficiency'
 
-    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
+    def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     """ Fundamental properties equations """
 
@@ -62,7 +62,7 @@ class Theoretical_victor(Cmp):
         mass_flow = h_out.mass_flow()
         return mass_flow * (h_out - h_in) / 1000.0
 
-    ### Extended properties equations ###
+    ### Auxiliary properties equations ###
     @auxiliary_property(displacement_volume=NumericProperty(0, inf))
     def _eval_eq_displacement_volume(self):
         id_inlet_node = list(self.get_id_inlet_nodes())[0]

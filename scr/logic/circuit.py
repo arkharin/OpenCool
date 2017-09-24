@@ -9,27 +9,26 @@ Define the circuit class
 import scr.logic.components.component as cmp
 import scr.logic.nodes.node as nd
 import scr.logic.refrigerants.refrigerant as ref
-from scr.logic.base_classes import Element, Identifier
+from scr.logic.base_classes import Identifier
 from scr.helpers.properties import StrRestricted
 from scr.logic.errors import ValuePropertyError, CircuitBuilderError, BuildError
 from scr.logic.warnings import CircuitBuilderWarning
 
 
-class Circuit(Element):
+class Circuit:
     BASIC_PROPERTIES = 'basic properties'
     COMPONENTS = 'components'
     COMPONENT_TYPE = 'type'
     IDENTIFIER = 'id'
     INLET_NODES = 'inlet nodes'
-    NAME = 'name'
     NODES = 'nodes'
     OPTIONAL_PROPERTIES = 'optional properties'
     OUTLET_NODES = 'outlet nodes'
     REFRIGERANT = 'refrigerant'
     REF_LIB = 'refrigerant_library'
 
-    def __init__(self, name, id_, refrigerant, refrigerant_library):
-        super().__init__(name, id_)
+    def __init__(self, id_, refrigerant, refrigerant_library):
+        self._id = id_
         self._ref_lib = refrigerant_library
         self._refrigerant = ref.Refrigerant.build(self.get_refrigerant_library(), refrigerant)
         self._nodes = {}
@@ -60,13 +59,13 @@ class Circuit(Element):
         self._link_nodes_mass_flows()
 
     def _create_mass_flows(self):
-        separate_components = self.search_components_by_type(cmp.Component.SEPARATOR_FLOW)
+        separate_components = self.search_components_by_type(cmp.ComponentInfo.SEPARATOR_FLOW)
         return [0.0] * (2 * len(separate_components) + 1)
 
     def _link_nodes_mass_flows(self):
         # Search components that modify flows
-        mix_components = self.search_components_by_type(cmp.Component.MIXER_FLOW)
-        separate_components = self.search_components_by_type(cmp.Component.SEPARATOR_FLOW)
+        mix_components = self.search_components_by_type(cmp.ComponentInfo.MIXER_FLOW)
+        separate_components = self.search_components_by_type(cmp.ComponentInfo.SEPARATOR_FLOW)
         flow_components = {**separate_components, **mix_components}
         # Create and fill id_mass_flow in nodes.
         if len(flow_components) == 0:
@@ -139,6 +138,9 @@ class Circuit(Element):
     def get_components_id(self):
         return list(self._components.keys())
 
+    def get_id(self):
+        return self._id
+
     def get_mass_flows(self):
         return self._mass_flows
 
@@ -172,7 +174,6 @@ class ACircuitSerializer:
     COMPONENT_TYPE = 'type'
     IDENTIFIER = 'id'
     INLET_NODES = 'inlet nodes'
-    NAME = 'name'
     NODES = 'nodes'
     OPTIONAL_PROPERTIES = 'optional properties'
     OUTLET_NODES = 'outlet nodes'
@@ -184,7 +185,6 @@ class ACircuitSerializer:
 
     def deserialize(self, circuit_file):
         circuit = CircuitBuilder(circuit_file[self.IDENTIFIER])
-        circuit.set_name(circuit_file[self.NAME])
         circuit.set_refrigerant(circuit_file[self.REFRIGERANT])
         circuit.set_refrigerant_library(circuit_file[self.REF_LIB])
         cmp_deserialize = cmp.AComponentSerializer()
@@ -204,8 +204,7 @@ class ACircuitSerializer:
         cmp_serializer = cmp.AComponentSerializer()
 
         # Get circuit serialized
-        circuit_serialized = {'name': circuit.get_name()}
-        circuit_serialized['id'] = circuit.get_id()
+        circuit_serialized={'id': circuit.get_id()}
 
         refrigerant = circuit.get_refrigerant()
         circuit_serialized['refrigerant'] = refrigerant.name()
@@ -225,8 +224,8 @@ class ACircuitSerializer:
 
 
 class CircuitBuilder:
+    # TODO check if builder check all input data.
     def __init__(self, id_):
-        self._name = None
         self._id = id_
         self._id_count = Identifier()
         self._id_count.add_forbidden_id(id_)
@@ -239,15 +238,13 @@ class CircuitBuilder:
     def build(self):
         # Build the circuit object to solve.
         # Check if the input data is correct.
-        if self._name is None:
-            raise CircuitBuilderWarning('Circuit %s has no name', self._id)
         # Check if refrigerant library and refrigerant are initialized.
         if self._ref_lib is None:
             raise ValuePropertyError('Refrigerant library is not selected')
         if self._refrigerant is None:
             raise ValuePropertyError('Refrigerant is not selected')
         # Created circuit object
-        self._circuit = Circuit(self._name, self._id, self._refrigerant.get(), self._ref_lib.get())
+        self._circuit = Circuit(self._id, self._refrigerant.get(), self._ref_lib.get())
         for node_id in self._nodes:
             node = self.get_node(node_id)
             try:
@@ -286,7 +283,7 @@ class CircuitBuilder:
             if component_id not in components_explored:
                 components_explored.append(component_id)
                 component = self.get_component(component_id)
-                outlet_nodes_id = component.get_outlet_nodes_id().copy()
+                outlet_nodes_id = component.get_outlet_nodes().copy()
                 outlet_node_id = outlet_nodes_id.pop()
                 nodes_to_explore += outlet_nodes_id
                 try:
@@ -294,9 +291,6 @@ class CircuitBuilder:
                     self._explore_circuit(components_explored, outlet_node_id, nodes_not_explored, nodes_to_explore)
                 except ValueError:
                     pass
-
-    def set_name(self, name):
-        self._name = StrRestricted(name)
 
     def set_refrigerant_library(self, ref_lib):
         self._ref_lib = StrRestricted(ref_lib, 'CoolPropHeos')
@@ -317,7 +311,7 @@ class CircuitBuilder:
 
     def remove_node(self, rm_node):
         rm_node_id = rm_node.get_id()
-        # Check the node is not use in nodes
+        # Check the node is not use in components
         attached_components = rm_node.get_components_id()
         for component_id in attached_components:
             component = self.get_component(component_id)
@@ -341,7 +335,7 @@ class CircuitBuilder:
     def remove_component(self, rm_component):
         rm_component_id = rm_component.get_id()
         # Check that the component is not use in nodes
-        attached_nodes = rm_component.get_nodes_id()
+        attached_nodes = rm_component.get_attached_nodes()
         for node_id in attached_nodes:
             node = self.get_node(node_id)
             node.remove_component(rm_component_id)

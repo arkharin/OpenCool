@@ -7,7 +7,7 @@ Define the Condenser component.
 """
 
 from scr.logic.components.component import Component as Cmp
-from scr.logic.errors import PropertyNameError
+from scr.logic.components.component import ComponentInfo as CmpInfo
 from scr.logic.components.component import component, basic_property
 from scr.helpers.properties import NumericProperty
 from math import inf
@@ -17,15 +17,15 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_condenser', Cmp.CONDENSER, 1, update_saved_data_to_last_version)
+@component('theoretical_condenser', CmpInfo.CONDENSER, 1, update_saved_data_to_last_version)
 class Theoretical(Cmp):
     HEATING_POWER = 'heating_power'
     PRESSURE_LOSE = 'pressure_lose'
     SATURATION_TEMPERATURE = 'saturation_temperature'
     SUBCOOLING = 'subcooling'
 
-    def __init__(self, name, id_, inlet_nodes_id, outlet_nodes_id, component_data):
-        super().__init__(name, id_, inlet_nodes_id, outlet_nodes_id, component_data)
+    def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     @basic_property(heating_power=NumericProperty(0, inf, unit='kW'))
     def _eval_heating_power(self):
