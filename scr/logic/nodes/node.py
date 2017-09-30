@@ -264,5 +264,5 @@ class NodeBuilder:
         except ValueError:
             raise NodeBuilderWarning('This component is not attached to the node')
 
-    def get_components_id(self):
+    def get_components(self):
         return self._components_id

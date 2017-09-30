@@ -25,9 +25,9 @@ class Presolver_v01 (PreSolver):
     BACKWARD = 'BACKWARD'
 
     def calculate_initial_conditions(self, circuit):
-        condensers = circuit.search_components_by_type(CONDENSER)
-        evaporators = circuit.search_components_by_type(EVAPORATOR)
-        expansion_valves = circuit.search_components_by_type(EXPANSION_VALVE)
+        condensers = circuit.get_components_by_type(CONDENSER)
+        evaporators = circuit.get_components_by_type(EVAPORATOR)
+        expansion_valves = circuit.get_components_by_type(EXPANSION_VALVE)
         # TODO ahora es un dict. revisar q varia.
         from_components = condensers.copy()
         from_components.update(expansion_valves)
