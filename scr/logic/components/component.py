@@ -394,6 +394,9 @@ class ComponentBuilder:
             else:
                 component_key = self._component_info.get_component_key()
                 raise ComponentBuilderError('In ' + component_key + ', ' + attribute_name + ' can\'t be ' + str(value))
+        else:
+            raise ComponentBuilderWarning(
+                'Component ' + self.get_component_type() + ' doesn\'t have the attribute ' + str(attribute_name))
 
     def remove_attribute(self, attribute_name):
         if attribute_name in self._component_data:
