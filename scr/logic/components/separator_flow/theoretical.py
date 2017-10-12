@@ -16,14 +16,14 @@ def update_saved_data_to_last_version(orig_data, orig_version):
     return orig_data
 
 
-@component('theoretical_separator_flow', CmpInfo.SEPARATOR_FLOW, 1, update_saved_data_to_last_version, inlet_nodes=1,
-           outlet_nodes=1)
+@component('adiabatic_one_phase_separator_flow', CmpInfo.SEPARATOR_FLOW, 1, update_saved_data_to_last_version, inlet_nodes=1,
+           outlet_nodes=2)
 class Theoretical(Cmp):
     PRESSURE_LOSE_1 = 'pressure lose inlet - outlet 1'
     PRESSURE_LOSE_2 = 'pressure lose inlet - outlet 2'
 
-    def __init__(self, data, circuit_nodes):
-        super().__init__(data, circuit_nodes)
+    def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
+        super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)
 
     @basic_property(pressure_lose_1=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose_1(self):
@@ -48,24 +48,34 @@ class Theoretical(Cmp):
         return (p_in - p_out) / 1000.0
 
     @fundamental_equation()
-    def _eval_intrinsic_equation_enthalpy(self):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+    def _eval_intrinsic_equation_enthalpy_1(self):
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_nodes = list(self.get_id_outlet_nodes())
+        id_outlet_nodes = self.get_id_outlet_nodes()
         outlet_node_1 = self.get_outlet_node(id_outlet_nodes[0])
-        outlet_node_2 = self.get_outlet_node(id_outlet_nodes[1])
 
         h_in = inlet_node.enthalpy()
         h_out_1 = outlet_node_1.enthalpy()
+
+        return [h_in, h_out_1]
+
+    @fundamental_equation()
+    def _eval_intrinsic_equation_enthalpy_2(self):
+        id_inlet_node = self.get_id_inlet_nodes()[0]
+        inlet_node = self.get_inlet_node(id_inlet_node)
+        id_outlet_nodes = self.get_id_outlet_nodes()
+        outlet_node_2 = self.get_outlet_node(id_outlet_nodes[1])
+
+        h_in = inlet_node.enthalpy()
         h_out_2 = outlet_node_2.enthalpy()
 
-        return [h_in / 1000.0, h_out_1 / 1000.0], [h_in / 1000.0, h_out_2 / 1000.0],
+        return [h_in, h_out_2]
 
     @fundamental_equation()
     def _eval_intrinsic_equations_mass(self):
-        id_inlet_node = list(self.get_id_inlet_nodes())[0]
+        id_inlet_node = self.get_id_inlet_nodes()[0]
         inlet_node = self.get_inlet_node(id_inlet_node)
-        id_outlet_nodes = list(self.get_id_outlet_nodes())
+        id_outlet_nodes = self.get_id_outlet_nodes()
         outlet_node_1 = self.get_outlet_node(id_outlet_nodes[0])
         outlet_node_2 = self.get_outlet_node(id_outlet_nodes[1])
 

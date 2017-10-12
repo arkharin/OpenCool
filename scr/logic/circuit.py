@@ -79,7 +79,6 @@ class Circuit:
                 outlet_nodes = component.get_outlet_nodes()
                 for id_node in outlet_nodes:
                     node = component.get_outlet_node(id_node)
-                    id_mass_flow += 1
                     self._fill_nodes_with_mass_flow(id_mass_flow, node, flow_components)
                     id_mass_flow += 1
 
@@ -244,7 +243,7 @@ class CircuitBuilder:
         # Save the components id already explored.
         cmp_explored = [c_id]
         # List for remember nodes to explore when there are more than one outlet node in a component.
-        n_to_explore = self.get_component(c_id).get_outlet_nodes()
+        n_to_explore = self.get_component(c_id).get_outlet_nodes().copy()
         for n in n_to_explore:
             n_not_explored.remove(n)
             # Explore the node and advance to the next node to explore.
