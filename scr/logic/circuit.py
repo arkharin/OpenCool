@@ -255,7 +255,7 @@ class CircuitBuilder:
             return True
 
     def _explore_node(self, n, cmp_explored, n_not_explored, n_to_explore):
-        # Explore a node, move to next component with this intlet node, move to one of the outlet node of the component
+        # Explore a node, move to next component with this inlet node, move to one of the outlet node of the component
         # and save the other to explore they later.
         cmps_attached = self.get_node(n).get_components()
         # Get an arbritary component. Can't be used .pop() because node object it's affected to.
