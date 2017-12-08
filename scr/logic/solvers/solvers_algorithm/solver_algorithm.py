@@ -42,3 +42,13 @@ class Solver_algorithm (ABC):
     @abstractmethod
     def exit_message(self):
         pass
+
+    # Shared functions between solvers algorithms.
+    def _updated_circuit(self, x, circuit):
+        nodes = circuit.get_nodes()
+        i = 0
+        for node in nodes:
+            node = nodes[node]
+            node.update_node_values(node.get_type_property_base_1(), x[i], node.get_type_property_base_2(), x[i + 1])
+            i += 2
+        circuit.update_mass_flows(x[i:len(x)])

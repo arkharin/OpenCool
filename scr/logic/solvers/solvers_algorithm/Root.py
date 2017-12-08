@@ -22,13 +22,7 @@ class Root(Solver_algorithm):
         return circuit
 
     def _get_equations_error(self, x, circuit):
-        nodes = circuit.get_nodes()
-        i = 0
-        for node in nodes:
-            node = nodes[node]
-            node.update_node_values(node.get_type_property_base_1(), x[i], node.get_type_property_base_2(), x[i + 1])
-            i += 2
-        circuit.update_mass_flows(x[i:len(x)])
+        self._updated_circuit(x, circuit)
         error = []
         components = circuit.get_components()
         for component in components:
