@@ -67,6 +67,10 @@ class Refrigerant:
         # Return critical temperature in Kelvin.
         return self._ref.T_critical()
 
+    def p_crit(self):
+        # Return critical temperature in Kelvin.
+        return self._ref.p_critical()
+
     def T_sat(self, pressure, Q=1.0):
         # Return saturated temperature in Kelvin.
         self._ref.update(Cp.PQ_INPUTS, pressure, Q)
@@ -80,3 +84,13 @@ class Refrigerant:
     def name(self):
         # Return a string.
         return self._ref.fluid_names()[0]
+
+    # Refrigerant property limits. If there are no limit, return None.
+    def Tmin(self):
+        return self._ref.Tmin()
+
+    def Tmax(self):
+        return self._ref.Tmax()
+
+    def pmax(self):
+        return self._ref.pmax()
