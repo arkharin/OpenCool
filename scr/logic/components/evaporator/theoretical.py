@@ -4,6 +4,7 @@
 
 """
 Define the Evaporator component.
+If pressure is higher than critical point, saturation properties are evaluated at critical point.
 """
 
 from scr.logic.components.component import Component as Cmp
@@ -46,7 +47,14 @@ class Theoretical(Cmp):
 
         p_out = outlet_node.pressure()
         ref = outlet_node.get_refrigerant()
-        return ref.T_sat(p_out)
+        # If the pressure is higher than critical pressure, there are no saturation temperature. In  this case, critical
+        # temperature will be used.
+        p_critical = ref.p_crit()
+        if p_out >= p_critical:
+            # TODO raise a warning
+            return ref.T_crit()
+        else:
+            return ref.T_sat(p_out)
 
     @basic_property(superheating=NumericProperty(0, inf, unit='K'))
     def _eval_superheating(self):
@@ -56,7 +64,15 @@ class Theoretical(Cmp):
         t_out = outlet_node.temperature()
         p_out = outlet_node.pressure()
         ref = outlet_node.get_refrigerant()
-        return t_out - ref.T_sat(p_out)
+        # If the pressure is higher than critical pressure, there are no saturation temperature. In  this case, critical
+        # temperature will be used.
+        p_critical = ref.p_crit()
+        if p_out >= p_critical:
+            # TODO raise a warning
+            t_sat = ref.T_crit()
+        else:
+            t_sat = ref.T_sat(p_out)
+        return t_out - t_sat
 
     @basic_property(pressure_lose=NumericProperty(0, inf, unit='kPa'))
     def _eval_pressure_lose(self):
