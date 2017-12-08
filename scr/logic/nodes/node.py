@@ -131,6 +131,18 @@ class Node(ABC):
         pass
 
     @abstractmethod
+    def get_limits_property_base_1(self):
+        # Return a dict with 'min'(minimum) and 'max' (maximum) values for the property 1.
+        # Return None if there are no limit.
+        pass
+
+    @abstractmethod
+    def get_limits_property_base_2(self):
+        # Return a dict with 'min'(minimum) and 'max' (maximum) values for the property 2.
+        # Return None if there are no limit.
+        pass
+
+    @abstractmethod
     def are_base_properties_init(self):
         # Check if the base physical properties are calculated or not.
         pass
@@ -140,6 +152,9 @@ class Node(ABC):
             return True
         else:
             return False
+
+    def get_id_mass_flow(self):
+        return self._id_mass_flow
 
     def set_id_mass_flow(self, id_mass_flow):
         self._id_mass_flow = id_mass_flow
