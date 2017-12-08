@@ -14,7 +14,8 @@ class TypeValueError(TypeError):
 class ValuePropertyError(ValueError):
     pass
 
-
+# TODO es el solver? el presolver? postSolver? Separar en Solver, Post, PreSolver error.
+# TODO Este justamente se utiliza en el circuito, al construirse. Buscar otro nombre.
 class CalculationError (RuntimeError):
     pass
 
@@ -50,4 +51,16 @@ class BuildError(RuntimeError):
 
 
 class DeserializerError(RuntimeError):
+    pass
+
+
+class PreSolverError(RuntimeError):
+    pass
+
+
+class SolverError(RuntimeError):
+    pass
+
+
+class PostSolverError(RuntimeError):
     pass
