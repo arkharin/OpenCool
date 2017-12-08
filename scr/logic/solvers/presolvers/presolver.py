@@ -30,4 +30,6 @@ class PreSolver (ABC):
 
     @abstractmethod
     def calculate_initial_conditions(self, circuit):
+        # Return a list with all nodes initialized with the pair of basic thermodynamic properties for node library and
+        # mass flows of the circuit.
         pass
