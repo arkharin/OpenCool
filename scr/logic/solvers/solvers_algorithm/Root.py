@@ -11,8 +11,7 @@ from scipy.optimize import root
 from scr.logic.solvers.solvers_algorithm.solver_algorithm import Solver_algorithm
 
 
-class Simple_circuit_solver(Solver_algorithm):
-
+class Root(Solver_algorithm):
     def __init__(self):
         super().__init__()
         self._solution = None
@@ -27,7 +26,7 @@ class Simple_circuit_solver(Solver_algorithm):
         i = 0
         for node in nodes:
             node = nodes[node]
-            node.update_node_values(node.get_type_property_base_1(), x[i], node.get_type_property_base_2(), x[i+1])
+            node.update_node_values(node.get_type_property_base_1(), x[i], node.get_type_property_base_2(), x[i + 1])
             i += 2
         circuit.update_mass_flows(x[i:len(x)])
         error = []
