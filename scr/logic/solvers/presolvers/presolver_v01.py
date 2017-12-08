@@ -3,9 +3,14 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
+
+DEPRECATED. Use ComplexPresolver
+
 Presolver for simple circuit
 """
 
+# TODO It's maintained temporally to compare with ComplexPresolver when a problem isn't solved. To be removed in the
+# future
 
 from scr.logic.solvers.presolvers.presolver import PreSolver
 import scr.logic.nodes.node as nd
