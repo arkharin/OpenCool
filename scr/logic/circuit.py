@@ -98,6 +98,7 @@ class Circuit:
                                        ' in _fill_nodes_with_mass_flow method')
             else:
                 node = inlet_component.get_outlet_node(inlet_component.get_id_outlet_nodes()[0])
+            i += 1
 
     def get_component(self, id_component):
         return self.get_components()[id_component]
