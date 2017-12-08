@@ -100,7 +100,9 @@ class Circuit:
                 node = inlet_component.get_outlet_node(inlet_component.get_id_outlet_nodes()[0])
             i += 1
 
-    def get_component(self, id_component):
+    def get_component(self, id_component=None):
+        if id_component is None:
+            id_component = self.get_components_id().pop()
         return self.get_components()[id_component]
 
     def get_components(self):
@@ -115,11 +117,16 @@ class Circuit:
     def get_mass_flows(self):
         return self._mass_flows
 
-    def get_node(self, id_node):
+    def get_node(self, id_node=None):
+        if id_node is None:
+            id_node = self.get_nodes_id().pop()
         return self.get_nodes()[id_node]
 
     def get_nodes(self):
         return self._nodes
+
+    def get_nodes_id(self):
+        return list(self._nodes.keys())
 
     def get_refrigerant(self):
         return self._refrigerant
@@ -259,7 +266,7 @@ class CircuitBuilder:
         # Explore a node, move to next component with this inlet node, move to one of the outlet node of the component
         # and save the other to explore they later.
         cmps_attached = self.get_node(n).get_components()
-        # Get an arbritary component. Can't be used .pop() because node object it's affected to.
+        # Get an arbitrary component. Can't be used .pop() because node object it's affected to.
         c = cmps_attached[0]
         if c in cmp_explored:
             c = cmps_attached[1]
