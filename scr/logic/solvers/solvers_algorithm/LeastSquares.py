@@ -45,6 +45,7 @@ Bashinhopping: a global minimizer. Call several times minimize to found minimums
 import numpy as np
 from scipy.optimize import least_squares
 from scr.logic.solvers.solvers_algorithm.solver_algorithm import Solver_algorithm
+from scr.logic.nodes.node import NodeInfoFactory, NodeInfo
 
 
 class LeastSquares(Solver_algorithm):
@@ -60,27 +61,30 @@ class LeastSquares(Solver_algorithm):
         node = circuit.get_node()
         lim_value_prop1 = node.get_limits_property_base_1()
         lim_value_prop2 = node.get_limits_property_base_2()
+        lim_mass_flow = NodeInfoFactory.get(node).get_property_limit(NodeInfo.MASS_FLOW)
         nodes_quantity = len(circuit.get_nodes())
         flows_quantity = len(circuit.get_mass_flows())
-        bnds = self._calc_bounds(lim_value_prop1, lim_value_prop2, nodes_quantity, flows_quantity)
+        bnds = self._calc_bounds(lim_value_prop1, lim_value_prop2, nodes_quantity, lim_mass_flow, flows_quantity)
         # Call the least squares algorithm.
         self._solution = least_squares(self._get_equations_error, ndarray_initial_conditions, args=(circuit,), bounds=bnds)
         self._updated_circuit(self._solution['x'], circuit)
         return circuit
 
-    def _calc_bounds(self, lim_value_prop1, lim_value_prop2, nodes_quantity, flows_quantity):
+    def _calc_bounds(self, lim_value_prop1, lim_value_prop2, nodes_quantity, lim_mass_flow, flows_quantity):
         lim_value_prop1 = self._transform_property_limits(lim_value_prop1)
         lim_value_prop2 = self._transform_property_limits(lim_value_prop2)
-        bnds1 = [lim_value_prop1['min'], lim_value_prop2['min']] * nodes_quantity + [0] * flows_quantity
-        bnds2 = [lim_value_prop1['max'], lim_value_prop2['max']] * nodes_quantity + [np.inf] * flows_quantity
+        lim_mass_flow = self._transform_property_limits(lim_mass_flow)
+        bnds1 = [lim_value_prop1[0], lim_value_prop2[0]] * nodes_quantity + [lim_mass_flow[0]] * flows_quantity
+        bnds2 = [lim_value_prop1[1], lim_value_prop2[1]] * nodes_quantity + [lim_mass_flow[1]] * flows_quantity
         return bnds1, bnds2
 
     def _transform_property_limits(self, limits):
-        if limits['min'] is None:
-            limits['min'] = -np.inf
-        if limits['max'] is None:
-            limits['max'] = np.inf
-        return limits
+        lim = list(limits)
+        if lim[0] is None:
+            lim[0] = -np.inf
+        if lim[1] is None:
+            lim[1] = np.inf
+        return lim
 
     def _get_equations_error(self, x, circuit):
         self._updated_circuit(x, circuit)

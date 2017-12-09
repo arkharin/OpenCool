@@ -86,11 +86,39 @@ class Refrigerant:
         return self._ref.fluid_names()[0]
 
     # Refrigerant property limits. If there are no limit, return None.
+    # TODO Coolprop 6.1.0 doesn't support check all limits. All not supported, are harcorded
     def Tmin(self):
         return self._ref.Tmin()
 
     def Tmax(self):
         return self._ref.Tmax()
 
+    def pmin(self):
+        return 0.0
+
     def pmax(self):
         return self._ref.pmax()
+
+    def dmin(self):
+        return 0.0
+
+    def dmax(self):
+        return None
+
+    def hmin(self):
+        return 0.0
+
+    def hmax(self):
+        return None
+
+    def smin(self):
+        return 0.0
+
+    def smax(self):
+        return None
+
+    def Qmin(self):
+        return 0.0
+
+    def Qmax(self):
+        return 1.0

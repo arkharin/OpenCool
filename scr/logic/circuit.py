@@ -280,9 +280,15 @@ class CircuitBuilder:
 
     def set_refrigerant_library(self, ref_lib):
         self._ref_lib = StrRestricted(ref_lib, 'CoolPropHeos')
+        # Only for NodeInfoFactory works with NodeBuilder object.
+        for node_id in self.get_nodes():
+            self.get_node(node_id)._set_refrigerant_library(ref_lib)
 
-    def set_refrigerant(self, refrigent):
-        self._refrigerant = StrRestricted(refrigent)
+    def set_refrigerant(self, refrigerant):
+        self._refrigerant = StrRestricted(refrigerant)
+        # Only for NodeInfoFactory works with NodeBuilder object.
+        for node_id in self.get_nodes():
+            self.get_node(node_id)._set_refrigerant(refrigerant)
 
     def add_node(self, component_id_1, component_id_2):
         if component_id_1 in self.get_components().keys() and component_id_2 in self.get_components().keys():

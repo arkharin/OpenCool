@@ -8,9 +8,10 @@ Define the abstract class node.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
-from scr.logic.errors import PropertyNameError, BuildError
+from scr.logic.errors import PropertyNameError, BuildError, InfoFactoryError
 from scr.logic.warnings import NodeBuilderWarning
 from scr.logic.refrigerants.refrigerant import Refrigerant
+from scr.helpers.singleton import Singleton
 
 
 class Node(ABC):
@@ -132,14 +133,12 @@ class Node(ABC):
 
     @abstractmethod
     def get_limits_property_base_1(self):
-        # Return a dict with 'min'(minimum) and 'max' (maximum) values for the property 1.
-        # Return None if there are no limit.
+        # Return a tuple with (minimum value, maximum value) supported for base property 1. None if there are no limit.
         pass
 
     @abstractmethod
     def get_limits_property_base_2(self):
-        # Return a dict with 'min'(minimum) and 'max' (maximum) values for the property 2.
-        # Return None if there are no limit.
+        # Return a tuple with (minimum value, maximum value) supported for base property 2. None if there are no limit.
         pass
 
     @abstractmethod
@@ -212,6 +211,8 @@ class Node(ABC):
 
         self._init_essential_properties(property_type_1, property_1, property_type_2, property_2)
 
+    def get_node_info(self):
+        return NodeInfoFactory.get(self)
 
 class ANodeSerializer:
     IDENTIFIER = 'id'
@@ -244,6 +245,9 @@ class NodeBuilder:
     def __init__(self, id_, component_id_1, component_id_2):
         self._id = id_
         self._components_id = [component_id_1, component_id_2]
+        # Only used for NodeInfoFactory. Allow to NodeInfoFactory accept a NodeBuilder object.
+        self._ref = None
+        self._ref_lib = None
 
     def build(self, refrigerant_object, ref_lib):
         # Return a node object.
@@ -281,3 +285,90 @@ class NodeBuilder:
 
     def get_components(self):
         return self._components_id
+
+    # Only for NodeInfoFactory works with NodeBuilder object.
+    def _set_refrigerant(self, refrigerant):
+        self._ref = refrigerant
+
+    # Only for NodeInfoFactory works with NodeBuilder object.
+    def _set_refrigerant_library(self, ref_lib):
+        self._ref_lib = ref_lib
+
+
+#
+class NodeInfo:
+    MASS_FLOW = 'mass flow'
+    # Thermodynamic properties. All units in SI.
+    DENSITY = Refrigerant.DENSITY
+    ENTROPY = Refrigerant.ENTROPY
+    ENTHALPY = Refrigerant.ENTHALPY
+    QUALITY = Refrigerant.QUALITY
+    PRESSURE = Refrigerant.PRESSURE
+    TEMPERATURE = Refrigerant.TEMPERATURE
+
+    def __init__(self, refrigerant_object):
+        self._ref = refrigerant_object
+
+    def get_properties(self):
+        # Return a tuple of properties supported by node.
+        return self.PRESSURE, self.TEMPERATURE, self.ENTHALPY, self.DENSITY, self.ENTROPY, self.QUALITY, self.MASS_FLOW
+
+    def get_property_limit(self, prop):
+        if prop == self.PRESSURE:
+            return self._pressure_limits()
+        elif prop == self.TEMPERATURE:
+            return self._temperature_limits()
+        elif prop == self.ENTHALPY:
+            return self._enthalpy_limits()
+        elif prop == self.DENSITY:
+            return self._density_limits()
+        elif prop == self.ENTROPY:
+            return self._entropy_limits()
+        elif prop == self.QUALITY:
+            return self._quality_limits()
+        elif prop == self.MASS_FLOW:
+            return self._mass_flow_limits()
+        else:
+            raise PropertyNameError('Property ' + prop + ' is not possible in NodeInfo')
+
+    # Return a tuple with (minimum value, maximum value) supported. None if there are no limit.
+    def _pressure_limits(self):
+        return self._ref.pmin(), self._ref.pmax()
+
+    def _temperature_limits(self):
+        return self._ref.Tmin(), self._ref.Tmax()
+
+    def _enthalpy_limits(self):
+        return self._ref.hmin(), self._ref.hmax()
+
+    def _density_limits(self):
+        return self._ref.dmin(), self._ref.dmax()
+
+    def _entropy_limits(self):
+        return self._ref.smin(), self._ref.smax()
+
+    def _quality_limits(self):
+        return self._ref.qmin(), self._ref.qmax()
+
+    def _mass_flow_limits(self):
+        return 0.0, None
+
+
+# For uniform API with ComponentInfo.
+class NodeInfoFactory(metaclass=Singleton):
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def get(key, *args):
+        if isinstance(key, Node):
+            return NodeInfo(key.get_refrigerant())
+        elif isinstance(key, NodeBuilder):
+            ref = key._ref
+            ref_lib = key._ref_lib
+            return Refrigerant.build(ref_lib, ref)
+        elif type(key) is str:
+            return Refrigerant.build(key, args[0])
+        else:
+            raise InfoFactoryError('NodeInfoFactory can\'t return a NodeInfo class with the argument passed: ' + key)
+

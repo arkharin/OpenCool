@@ -31,8 +31,10 @@ class TypeComponentError(TypeError):
 class PropertyNameError(NameError):
     pass
 
+
 class PropertyValueError(RuntimeError):
     pass
+
 
 class ComponentBuilderError(RuntimeError):
     pass
@@ -63,4 +65,8 @@ class SolverError(RuntimeError):
 
 
 class PostSolverError(RuntimeError):
+    pass
+
+
+class InfoFactoryError(ValueError):
     pass

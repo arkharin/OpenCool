@@ -41,14 +41,11 @@ class CoolPropHeos(Node):
         self._density = ref.d(property_type_1, property_1, property_type_2, property_2)
 
     def get_limits_property_base_1(self):
-        # Return a dict with 'min'(minimum) and 'max' (maximum) values for the property 1.
-        # Return None if there are no limit.
-        ref = self.get_refrigerant()
-        return {'min': ref.Tmin(), 'max': ref.Tmax()}
+        n_info = self.get_node_info()
+        return n_info.get_property_limit(n_info.TEMPERATURE)
 
     def get_limits_property_base_2(self):
-        # Return a dict with 'min'(minimum) and 'max' (maximum) values for the property 2.
-        # Return None if there are no limit.
-        return {'min': 0, 'max': None}
+        n_info = self.get_node_info()
+        return n_info.get_property_limit(n_info.DENSITY)
 
 
