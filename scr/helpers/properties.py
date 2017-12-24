@@ -52,6 +52,9 @@ class NumericProperty(Property):
     def get_unit(self):
         return self._unit
 
+    def get_limits(self):
+        return [self._lower_boundary, self._upper_boundary]
+
 
 class StrRestricted(Property):
     def __init__(self, string=None, *string_allowed):
