@@ -29,4 +29,6 @@ class PostSolver (ABC):
 
     @abstractmethod
     def post_solve(self, circuit):
+        # Return the solution items of SolutionResults. Is who calculate all desired properties, like thermodynamic
+        # properties of the nodes, the basic and the auxiliary properties or the change of the units of the results.
         pass

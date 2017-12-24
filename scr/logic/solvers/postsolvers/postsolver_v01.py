@@ -8,46 +8,48 @@ Postsolver for circuit
 
 
 from scr.logic.solvers.postsolvers.postsolver import PostSolver
+from scr.logic.solvers.solver import SolutionResults as SR
 
 
 class Postsolver_v01(PostSolver):
 
     def post_solve(self, circuit):
-        circuit = self._solve_nodes(circuit)
-        circuit = self._solve_components(circuit)
-        return circuit
+        cir_id = circuit.get_id()
+        circuit_solved = {SR.NODES: {}, SR.COMPONENTS: {}}
+        for node in circuit.get_nodes():
+            node_results = self._get_node_results(circuit.get_node(node))
+            circuit_solved[SR.NODES][node] = node_results
 
-    def _solve_nodes(self, circuit):
-        nodes = circuit.get_nodes()
-        for node in nodes:
-            node = nodes[node]
-            # Update node values with last base value calculated.
-            node.update_node_values(node.get_type_property_base_1(), node.get_value_property_base_1(),
-                                    node.get_type_property_base_2(), node.get_value_property_base_2())
-            # Calculate all thermodynamic properties.
-            node.pressure()
-            node.temperature()
-            node.enthalpy()
-            node.density()
-            node.entropy()
-            node.quality()
+        for component in circuit.get_components():
+            component_results = self._get_component_results(circuit.get_component(component))
+            circuit_solved[SR.COMPONENTS][component] = component_results
 
-        return circuit
+        return {cir_id: circuit_solved}
 
-    def _solve_components(self, circuit):
-        components = circuit.get_components()
-        for component in components:
-            component = components[component]
-            self._solve_basic_properties(component)
-            self._solve_auxiliary_properties(component)
-        return circuit
+    def _get_node_results(self, node):
+        # Return dict with thermodynamic properties evaluated. Keys are global name of the properties.
+        n_info = node.get_node_info()
+        results = {}
+        results[n_info.PRESSURE] = {SR.VALUE: node.pressure(), SR.UNIT: n_info.get_property(n_info.PRESSURE).get_unit()}
+        results[n_info.TEMPERATURE] = {SR.VALUE: node.temperature(),
+                                       SR.UNIT: n_info.get_property(n_info.TEMPERATURE).get_unit()}
+        results[n_info.ENTHALPY] = {SR.VALUE: node.enthalpy(), SR.UNIT: n_info.get_property(n_info.ENTHALPY).get_unit()}
+        results[n_info.DENSITY] = {SR.VALUE: node.density(), SR.UNIT: n_info.get_property(n_info.DENSITY).get_unit()}
+        results[n_info.ENTROPY] = {SR.VALUE: node.entropy(), SR.UNIT: n_info.get_property(n_info.ENTROPY).get_unit()}
+        results[n_info.QUALITY] = {SR.VALUE: node.quality(), SR.UNIT: n_info.get_property(n_info.QUALITY).get_unit()}
+        results[n_info.MASS_FLOW] = {SR.VALUE: node.mass_flow(),
+                                     SR.UNIT: n_info.get_property(n_info.MASS_FLOW).get_unit()}
+        return results
 
-    def _solve_basic_properties(self, cmp):
-        self._solve_properties(cmp, cmp.get_basic_properties())
+    def _get_component_results(self, component):
+        basic_properties = self._serialize_properties(component, component.get_basic_properties())
+        aux_properties = self._serialize_properties(component, component.get_auxiliary_properties())
+        return {SR.BASIC_PROPERTIES: basic_properties, SR.AUXILIARY_PROPERTIES: aux_properties}
 
-    def _solve_auxiliary_properties(self, cmp):
-        self._solve_properties(cmp, cmp.get_auxiliary_properties())
+    def _serialize_properties(self, component, properties):
+        cmp_info = component.get_component_info()
+        results = {}
+        for i in properties:
+            results[i] = {SR.VALUE: component.solve_property(i), SR.UNIT: cmp_info.get_property(i).get_unit()}
+        return results
 
-    def _solve_properties(self, cmp, properties):
-        for key in properties:
-            cmp.solve_property(key)

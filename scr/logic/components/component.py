@@ -107,8 +107,6 @@ class Component(ABC):
         self._outlet_nodes = outlet_nodes_id
         self._basic_properties = {}
         self._auxiliary_properties = {}
-        self._basic_properties_results = {}
-        self._auxiliary_properties_results = {}
 
         # Create and register the properties and equations. The only use is for register equations functions.
         self._fundamental_eqs = []
@@ -178,9 +176,11 @@ class Component(ABC):
 
     def solve_property(self, key):
         if key in self.get_basic_properties():
-            self._basic_properties_results[key] = self._basic_eqs[key]()
+            return self._basic_eqs[key]()
+
         elif key in self.get_auxiliary_properties():
-            self._auxiliary_properties_results[key] = self._auxiliary_eqs[key]()
+            return self._auxiliary_eqs[key]()
+
         else:
             raise ComponentWarning('%s property is not allowed in %s component' % (key, self.get_component_info().
                                                                                    get_component_type()))
@@ -244,16 +244,15 @@ class Component(ABC):
 
 
 class AComponentSerializer(ABC):
+    # TODO Serializer and deserializer doesn't take into account the units.
     # Parameters
     BASIC_PROPERTIES = 'basic properties'
-    BASIC_PROPERTIES_SOLVED = 'basic properties solved'
     COMPONENTS = 'components'
     COMPONENT_TYPE = 'type'
     IDENTIFIER = 'id'
     INLET_NODES = 'inlet nodes'
     NODES = 'nodes'
     AUXILIARY_PROPERTIES = 'auxiliary properties'
-    AUXILIARY_PROPERTIES_SOLVED = 'auxiliary properties solved'
     OUTLET_NODES = 'outlet nodes'
     VERSION = 'version'
 
@@ -294,12 +293,8 @@ class AComponentSerializer(ABC):
         cmp_serialized[self.INLET_NODES] = component.get_id_inlet_nodes()
         cmp_serialized[self.OUTLET_NODES] = component.get_id_outlet_nodes()
         self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES, component.get_basic_properties())
-        self._serialize_properties(cmp_serialized, self.BASIC_PROPERTIES_SOLVED,
-                                   component.get_basic_properties_results())
         self._serialize_properties(cmp_serialized, self.AUXILIARY_PROPERTIES,
                                    component.get_auxiliary_properties())
-        self._serialize_properties(cmp_serialized, self.AUXILIARY_PROPERTIES_SOLVED,
-                                   component.get_auxiliary_properties_results())
         return cmp_serialized
 
     def _serialize_properties(self, cmp_serialized, properties_type, properties):

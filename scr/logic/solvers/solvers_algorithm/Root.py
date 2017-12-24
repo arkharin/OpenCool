@@ -9,6 +9,7 @@ Solver for simple circuit
 import numpy as np
 from scipy.optimize import root
 from scr.logic.solvers.solvers_algorithm.solver_algorithm import Solver_algorithm
+from scr.logic.solvers.solver import SolutionResults as SR
 
 
 class Root(Solver_algorithm):
@@ -19,7 +20,7 @@ class Root(Solver_algorithm):
     def solve(self, circuit, initial_conditions, **kwargs):
         ndarray_initial_conditions = np.array(initial_conditions)
         self._solution = root(self._get_equations_error, ndarray_initial_conditions, args=circuit)
-        return circuit
+        return self._adapt_solution_to_solution_results()
 
     def _get_equations_error(self, x, circuit):
         self._updated_circuit(x, circuit)
@@ -31,11 +32,19 @@ class Root(Solver_algorithm):
                 error.append(equation_result[0] - equation_result[1])
         return error
 
-    def get_solution_error(self):
-        return self._solution['fun']
-
-    def is_solution_converged(self):
-            return self._solution['success']
-
-    def exit_message(self):
-        return self._solution['message']
+    def _adapt_solution_to_solution_results(self):
+        solution_adapted = {SR.X: list(self._solution['x'])}
+        solution_adapted[SR.SUCCESS] = self._solution['success']
+        solution_adapted[SR.MESSAGE] = self._solution['message']
+        solution_adapted[SR.RESIDUALS] = list(self._solution['fun'])
+        min = abs(self._solution['fun'].min())
+        max = abs(self._solution['fun'].max())
+        if max > min:
+            solution_adapted[SR.MAXRS] = max
+        else:
+            solution_adapted[SR.MAXRS] = min
+        solution_adapted[SR.STATUS] = self._solution['status']
+        solution_adapted[SR.SOLVER_SPECIFIC] = {'qtf': list(self._solution['qtf'])}
+        solution_adapted[SR.SOLVER_SPECIFIC]['nfev'] = self._solution['nfev']
+        solution_adapted[SR.SOLVER_SPECIFIC]['r'] = list(self._solution['r'])
+        return solution_adapted

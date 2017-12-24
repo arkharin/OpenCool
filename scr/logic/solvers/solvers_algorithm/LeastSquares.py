@@ -46,6 +46,7 @@ import numpy as np
 from scipy.optimize import least_squares
 from scr.logic.solvers.solvers_algorithm.solver_algorithm import Solver_algorithm
 from scr.logic.nodes.node import NodeInfoFactory, NodeInfo
+from scr.logic.solvers.solver import SolutionResults as SR
 
 
 class LeastSquares(Solver_algorithm):
@@ -67,8 +68,7 @@ class LeastSquares(Solver_algorithm):
         bnds = self._calc_bounds(lim_value_prop1, lim_value_prop2, nodes_quantity, lim_mass_flow, flows_quantity)
         # Call the least squares algorithm.
         self._solution = least_squares(self._get_equations_error, ndarray_initial_conditions, args=(circuit,), bounds=bnds)
-        self._updated_circuit(self._solution['x'], circuit)
-        return circuit
+        return self._adapt_solution_to_solution_results()
 
     def _calc_bounds(self, lim_value_prop1, lim_value_prop2, nodes_quantity, lim_mass_flow, flows_quantity):
         lim_value_prop1 = self._transform_property_limits(lim_value_prop1)
@@ -96,11 +96,24 @@ class LeastSquares(Solver_algorithm):
                 error.append(equation_result[0] - equation_result[1])
         return error
 
-    def get_solution_error(self):
-        return self._solution['fun']
+    def _adapt_solution_to_solution_results(self):
+        solution_adapted = {SR.X: list(self._solution['x'])}
+        solution_adapted[SR.SUCCESS] = self._solution['success']
+        solution_adapted[SR.MESSAGE] = self._solution['message']
+        solution_adapted[SR.RESIDUALS] = list(self._solution['fun'])
+        min = abs(self._solution['fun'].min())
+        max = abs(self._solution['fun'].max())
+        if max > min:
+            solution_adapted[SR.MAXRS] = max
+        else:
+            solution_adapted[SR.MAXRS] = min
+        solution_adapted[SR.STATUS] = self._solution['status']
+        solution_adapted[SR.SOLVER_SPECIFIC] = {'cost': self._solution['cost']}
+        solution_adapted[SR.SOLVER_SPECIFIC]['nfev'] = self._solution['nfev']
+        solution_adapted[SR.SOLVER_SPECIFIC]['njev'] = self._solution['njev']
+        solution_adapted[SR.SOLVER_SPECIFIC]['optimality'] = self._solution['optimality']
+        solution_adapted[SR.SOLVER_SPECIFIC]['grad'] = list(self._solution['grad'])
 
-    def is_solution_converged(self):
-            return self._solution['success']
 
-    def exit_message(self):
-        return self._solution['message']
+
+        return solution_adapted

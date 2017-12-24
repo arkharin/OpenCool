@@ -29,18 +29,8 @@ class Solver_algorithm (ABC):
 
     @abstractmethod
     def solve(self, circuit, initial_conditions, **kwargs):
-        pass
-
-    @abstractmethod
-    def get_solution_error(self):
-        pass
-
-    @abstractmethod
-    def is_solution_converged(self):
-        pass
-
-    @abstractmethod
-    def exit_message(self):
+        # Return a dict with the items follwing items defined in SoltionResults: x, success, message, residuals, maxrs,
+        # status, solver specific
         pass
 
     # Shared functions between solvers algorithms.

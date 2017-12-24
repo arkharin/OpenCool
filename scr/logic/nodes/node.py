@@ -218,28 +218,13 @@ class Node(ABC):
 class ANodeSerializer:
     IDENTIFIER = 'id'
     COMPONENTS = 'components'
-    UNIT = 'Units'
-
-    def __init__(self):
-        pass
 
     def deserialize(self, node_file):
         node = NodeBuilder(node_file[self.IDENTIFIER], node_file[self.COMPONENTS][0], node_file[self.COMPONENTS][1])
         return node
 
     def serialize(self, node):
-        return {self.IDENTIFIER: node.get_id(), self.UNIT: 'All units in SI',
-                'Results': self._get_properties(node), self.COMPONENTS: node.get_id_attach_components()}
-
-    def _get_properties(self, node):
-        # Return dict with thermodynamic properties evaluated. Keys are global name of the properties.
-        properties = {'pressure': node.pressure()}
-        properties['temperature'] = node.temperature()
-        properties['enthalpy'] = node.enthalpy()
-        properties['density'] = node.density()
-        properties['entropy'] = node.entropy()
-        properties['quality'] = node.quality()
-        return properties
+        return {self.IDENTIFIER: node.get_id(), self.COMPONENTS: node.get_id_attach_components()}
 
 
 class NodeBuilder:
@@ -298,14 +283,15 @@ class NodeBuilder:
 
 #
 class NodeInfo:
-    MASS_FLOW = 'mass flow'
-    # Thermodynamic properties. All units in SI.
-    DENSITY = Refrigerant.DENSITY
-    ENTROPY = Refrigerant.ENTROPY
-    ENTHALPY = Refrigerant.ENTHALPY
-    QUALITY = Refrigerant.QUALITY
-    PRESSURE = Refrigerant.PRESSURE
-    TEMPERATURE = Refrigerant.TEMPERATURE
+    # Only supported units in SI.
+    MASS_FLOW = 'Mass flow'
+    # Thermodynamic properties.
+    DENSITY = 'Density'
+    ENTROPY = 'Entropy'
+    ENTHALPY = 'Enthalpy'
+    QUALITY = 'Quality'
+    PRESSURE = 'Pressure'
+    TEMPERATURE = 'Temperature'
 
     def __init__(self, refrigerant_object):
         self._ref = refrigerant_object
