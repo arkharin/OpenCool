@@ -12,6 +12,7 @@ from scr.logic.errors import PropertyNameError, BuildError, InfoFactoryError
 from scr.logic.warnings import NodeBuilderWarning
 from scr.logic.refrigerants.refrigerant import Refrigerant
 from scr.helpers.singleton import Singleton
+from scr.helpers.properties import NumericProperty
 
 
 class Node(ABC):
@@ -308,50 +309,29 @@ class NodeInfo:
 
     def __init__(self, refrigerant_object):
         self._ref = refrigerant_object
+        self._pressure = NumericProperty(self._ref.pmin(), self._ref.pmax(), unit='Pa')
+        self._temperature = NumericProperty(self._ref.Tmin(), self._ref.Tmax(), unit='K')
+        self._density = NumericProperty(self._ref.dmin(), self._ref.dmax(), unit='kg/m3')
+        self._enthalpy = NumericProperty(self._ref.hmin(), self._ref.hmax(), unit='J/kg')
+        self._entropy = NumericProperty(self._ref.smin(), self._ref.smax(), unit='J/kg*K')
+        self._quality = NumericProperty(self._ref.Qmin(), self._ref.Qmax(), unit='')
+        self._mass_flow = NumericProperty(0.0, None, unit='kg/s')
 
     def get_properties(self):
-        # Return a tuple of properties supported by node.
-        return self.PRESSURE, self.TEMPERATURE, self.ENTHALPY, self.DENSITY, self.ENTROPY, self.QUALITY, self.MASS_FLOW
+        # Return a dict of properties supported by node.
+        return {self.PRESSURE: self._pressure, self.TEMPERATURE: self._temperature, self.DENSITY: self._density,
+                self.ENTHALPY: self._enthalpy, self.ENTROPY: self._entropy, self.QUALITY: self._quality,
+                self.MASS_FLOW: self._mass_flow}
+
+    def get_property(self, property_name):
+        properties = self.get_properties()
+        if property_name in properties:
+            return properties[property_name]
+        else:
+            raise PropertyNameError('Property ' + str(property_name) + ' is not possible in ' + str(type(self)))
 
     def get_property_limit(self, prop):
-        if prop == self.PRESSURE:
-            return self._pressure_limits()
-        elif prop == self.TEMPERATURE:
-            return self._temperature_limits()
-        elif prop == self.ENTHALPY:
-            return self._enthalpy_limits()
-        elif prop == self.DENSITY:
-            return self._density_limits()
-        elif prop == self.ENTROPY:
-            return self._entropy_limits()
-        elif prop == self.QUALITY:
-            return self._quality_limits()
-        elif prop == self.MASS_FLOW:
-            return self._mass_flow_limits()
-        else:
-            raise PropertyNameError('Property ' + prop + ' is not possible in NodeInfo')
-
-    # Return a tuple with (minimum value, maximum value) supported. None if there are no limit.
-    def _pressure_limits(self):
-        return self._ref.pmin(), self._ref.pmax()
-
-    def _temperature_limits(self):
-        return self._ref.Tmin(), self._ref.Tmax()
-
-    def _enthalpy_limits(self):
-        return self._ref.hmin(), self._ref.hmax()
-
-    def _density_limits(self):
-        return self._ref.dmin(), self._ref.dmax()
-
-    def _entropy_limits(self):
-        return self._ref.smin(), self._ref.smax()
-
-    def _quality_limits(self):
-        return self._ref.qmin(), self._ref.qmax()
-
-    def _mass_flow_limits(self):
-        return 0.0, None
+        return self.get_property(prop).get_limits()
 
 
 # For uniform API with ComponentInfo.
