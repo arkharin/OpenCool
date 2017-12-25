@@ -220,8 +220,7 @@ class SolutionResults(dict):
     def serialize(self):
         return self
 
-    def deserelize(self):
-        #TODO
-        pass
+    def deserialize(self, results_file):
+        return results_file
 
 
