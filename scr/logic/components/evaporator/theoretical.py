@@ -20,10 +20,6 @@ def update_saved_data_to_last_version(orig_data, orig_version):
 
 @component('theoretical_evaporator', CmpInfo.EVAPORATOR, 1, update_saved_data_to_last_version)
 class Theoretical(Cmp):
-    COOLING_POWER = 'cooling_power'
-    PRESSURE_LOSE = 'pressure_lose'
-    SATURATION_TEMPERATURE = 'saturation_temperature'
-    SUPERHEATING = 'superheating'
 
     def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)

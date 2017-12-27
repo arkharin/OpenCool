@@ -19,8 +19,6 @@ def update_saved_data_to_last_version(orig_data, orig_version):
 @component('adiabatic_one_phase_separator_flow', CmpInfo.SEPARATOR_FLOW, 1, update_saved_data_to_last_version, inlet_nodes=1,
            outlet_nodes=2)
 class Theoretical(Cmp):
-    PRESSURE_LOSE_1 = 'pressure lose inlet - outlet 1'
-    PRESSURE_LOSE_2 = 'pressure lose inlet - outlet 2'
 
     def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)

@@ -19,8 +19,6 @@ def update_saved_data_to_last_version(orig_data, orig_version):
 @component('adiabatic_mixer_flow', CmpInfo.MIXER_FLOW, 1, update_saved_data_to_last_version, inlet_nodes=2,
            outlet_nodes=1)
 class Theoretical(Cmp):
-    PRESSURE_LOSE_1 = 'pressure lose inlet 1 - outlet'
-    PRESSURE_LOSE_2 = 'pressure lose inlet 2 - outlet'
 
     def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)

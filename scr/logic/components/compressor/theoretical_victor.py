@@ -22,10 +22,6 @@ def update_saved_data_to_last_version(orig_data, orig_version):
 
 @component('theoretical_compressor', CmpInfo.COMPRESSOR, 1, update_saved_data_to_last_version)
 class Theoretical_victor(Cmp):
-    DISPLACEMENT_VOLUME = 'displacement_volume'
-    ISENTROPIC_EFFICIENCY = 'isentropic_efficiency'
-    POWER_CONSUMPTION = 'power_consumption'
-    VOLUMETRIC_EFFICIENCY = 'volumetric_efficiency'
 
     def __init__(self, id_, inlet_nodes_id, outlet_nodes_id, component_data):
         super().__init__(id_, inlet_nodes_id, outlet_nodes_id, component_data)
