@@ -16,14 +16,6 @@ from scr.helpers.properties import NumericProperty
 
 
 class Node(ABC):
-    # Thermodynamic properties. All units in SI.
-    DENSITY = Refrigerant.DENSITY
-    ENTROPY = Refrigerant.ENTROPY
-    ENTHALPY = Refrigerant.ENTHALPY
-    QUALITY = Refrigerant.QUALITY
-    PRESSURE = Refrigerant.PRESSURE
-    TEMPERATURE = Refrigerant.TEMPERATURE
-
     def __init__(self, id_, components_id, refrigerant_object):
         self._id = id_
         self._inlet_component_attached = None
@@ -58,37 +50,38 @@ class Node(ABC):
         elif property_type_1 is type_property_base_2 and property_type_2 is type_property_base_1:
             return
         else:
-            self._set_value_property_base_1(property_type_1, property_1, property_type_2, property_2)
-            self._set_value_property_base_2(property_type_1, property_1, property_type_2, property_2)
+            self._calculate_value_property_base_1(property_type_1, property_1, property_type_2, property_2)
+            self._calculate_value_property_base_2(property_type_1, property_1, property_type_2, property_2)
 
     def _set_property(self, property_type, property_value):
-        if property_type is self.TEMPERATURE:
+        nd_info = self.get_node_info()
+        if property_type is nd_info.TEMPERATURE:
             self._temperature = property_value
 
-        elif property_type is self.DENSITY:
+        elif property_type is nd_info.DENSITY:
             self._density = property_value
 
-        elif property_type is self.PRESSURE:
+        elif property_type is nd_info.PRESSURE:
             self._pressure = property_value
 
-        elif property_type is self.ENTHALPY:
+        elif property_type is nd_info.ENTHALPY:
             self._enthalpy = property_value
 
-        elif property_type is self.ENTROPY:
+        elif property_type is nd_info.ENTROPY:
             self._entropy = property_value
 
-        elif property_type is self.QUALITY:
+        elif property_type is nd_info.QUALITY:
             self._quality = property_value
 
         else:
             raise PropertyNameError("Error in Node -> _set_property: The property is not recognize")
 
     @abstractmethod
-    def _set_value_property_base_1(self, property_type_1, property_1, property_type_2, property_2):
+    def _calculate_value_property_base_1(self, property_type_1, property_1, property_type_2, property_2):
         pass
 
     @abstractmethod
-    def _set_value_property_base_2(self, property_type_1, property_1, property_type_2, property_2):
+    def _calculate_value_property_base_2(self, property_type_1, property_1, property_type_2, property_2):
         pass
 
     def get_id(self):
@@ -284,14 +277,14 @@ class NodeBuilder:
 #
 class NodeInfo:
     # Only supported units in SI.
-    MASS_FLOW = 'Mass flow'
+    MASS_FLOW = -1
     # Thermodynamic properties.
-    DENSITY = 'Density'
-    ENTROPY = 'Entropy'
-    ENTHALPY = 'Enthalpy'
-    QUALITY = 'Quality'
-    PRESSURE = 'Pressure'
-    TEMPERATURE = 'Temperature'
+    DENSITY = Refrigerant.DENSITY
+    ENTROPY = Refrigerant.ENTROPY
+    ENTHALPY = Refrigerant.ENTHALPY
+    QUALITY = Refrigerant.QUALITY
+    PRESSURE = Refrigerant.PRESSURE
+    TEMPERATURE = Refrigerant.TEMPERATURE
 
     def __init__(self, refrigerant_object):
         self._ref = refrigerant_object

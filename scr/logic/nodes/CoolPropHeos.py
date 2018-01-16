@@ -7,6 +7,7 @@ Define the HEOS CoolProp backend for node.
 """
 
 from scr.logic.nodes.node import Node
+from scr.logic.refrigerants.refrigerant import Refrigerant as Rf
 
 
 class CoolPropHeos(Node):
@@ -15,10 +16,12 @@ class CoolPropHeos(Node):
         super().__init__(id_, components_id, refrigerant_object)
 
     def get_type_property_base_1(self):
-        return self.TEMPERATURE
+        n_info = self.get_node_info()
+        return n_info.TEMPERATURE
 
     def get_type_property_base_2(self):
-        return self.DENSITY
+        n_info = self.get_node_info()
+        return n_info.DENSITY
 
     def get_value_property_base_1(self):
         return self.temperature()
@@ -32,11 +35,11 @@ class CoolPropHeos(Node):
         else:
             return True
 
-    def _set_value_property_base_1(self, property_type_1, property_1, property_type_2, property_2):
+    def _calculate_value_property_base_1(self, property_type_1, property_1, property_type_2, property_2):
         ref = self.get_refrigerant()
         self._temperature = ref.T(property_type_1, property_1, property_type_2, property_2)
 
-    def _set_value_property_base_2(self, property_type_1, property_1, property_type_2, property_2):
+    def _calculate_value_property_base_2(self, property_type_1, property_1, property_type_2, property_2):
         ref = self.get_refrigerant()
         self._density = ref.d(property_type_1, property_1, property_type_2, property_2)
 
@@ -47,5 +50,3 @@ class CoolPropHeos(Node):
     def get_limits_property_base_2(self):
         n_info = self.get_node_info()
         return n_info.get_property_limit(n_info.DENSITY)
-
-
