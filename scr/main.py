@@ -10,6 +10,7 @@ import scr.logic.components.component as cmp2
 import os
 import sys
 from pathlib import Path
+from scr.logic.initial_values import InitialValues
 
 
 def _load_plugins_from_directory(dir_, use_working_directory_as_reference=True):
@@ -43,11 +44,16 @@ if plugins_directory is not None:
 
 
 
-load_circuit = load('simple circuit complex presolver', 'OpenCool circuits')
+#load_circuit = load('simple circuit complex presolver', 'OpenCool circuits')
 #load_circuit = load('two stage circuit complex presolver', 'OpenCool circuits')
+#load_circuit = load('simple circuit initial values', 'OpenCool circuits')
+#load_circuit = load('two stage circuit initial values', 'OpenCool circuits')
+load_circuit = load('test', 'OpenCool circuits')
+
 
 #presolver = 'presolver_v01'  #Deprecated
 presolver ='ComplexPresolver'
+#presolver = 'OldComplexPresolver'
 #solver = 'Root'  #Old simple circuit solver
 solver = 'LeastSquares'
 
@@ -56,9 +62,11 @@ postsolver = 'postsolver_v01'
 
 ser = circ.ACircuitSerializer()
 circuit = ser.deserialize(load_circuit)
+x0 = InitialValues.deserialize(load_circuit)
+#x0 = None
 print("circuit deserilize succesfully")
 circuit = circuit.build()
-solver = Solver(circuit, presolver, solver, postsolver)
+solver = Solver(circuit, presolver, solver, postsolver, x0)
 solution = solver.solve()
 print('Is circuit solved? %s' % solution.is_solved())
 print('The error is:\n')
@@ -69,12 +77,18 @@ print()
 #print(solution.get_all_circuits)
 
 circuit_serialized = ser.serialize(circuit)
+inital_values_serialized = x0.serialize()
 solution_serialized = solution.serialize()
-data_to_save = {**circuit_serialized, **solution_serialized}
+data_to_save = {**circuit_serialized, **solution_serialized, **inital_values_serialized}
+
 #save(data_to_save, 'simple circuit complex presolver', 'OpenCool circuits')
 #save(data_to_save, 'one compressor-two evaporators complex presolver solved', 'OpenCool circuits')
-# save(circuit_serialized, 'test', 'OpenCool circuits')
+#save(circuit_serialized, 'test', 'OpenCool circuits')
 # save(solution_serialized, 'test', 'OpenCool circuits')
+#save(data_to_save, 'simple circuit initial values solved', 'OpenCool circuits')
+#save(data_to_save, 'two stage circuit initial values solved', 'OpenCool circuits')
+
+# TODO hay TODO en el circuito!!
 save(data_to_save, 'test', 'OpenCool circuits')
 
 print('end')

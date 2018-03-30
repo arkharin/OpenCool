@@ -29,7 +29,8 @@ class Presolver_v01 (PreSolver):
     FORWARD = 'FORWARD'
     BACKWARD = 'BACKWARD'
 
-    def calculate_initial_conditions(self, circuit):
+    def calculate_initial_conditions(self, circuit, user_initial_values):
+        print('Presolver v01 not use user initial values')
         condensers = circuit.get_components_by_type(CONDENSER)
         evaporators = circuit.get_components_by_type(EVAPORATOR)
         expansion_valves = circuit.get_components_by_type(EXPANSION_VALVE)

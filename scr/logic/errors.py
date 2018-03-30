@@ -70,3 +70,7 @@ class PostSolverError(RuntimeError):
 
 class InfoFactoryError(ValueError):
     pass
+
+
+class InitialValuesError(RuntimeError):
+    pass

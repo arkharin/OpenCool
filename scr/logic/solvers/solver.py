@@ -14,7 +14,7 @@ from scr.logic.errors import SolverError
 
 class Solver:
 
-    def __init__(self, circuit, presolver, solver, postsolver):
+    def __init__(self, circuit, presolver, solver, postsolver, user_initial_values=None):
         self._circuit = circuit
         self._solution = SolutionResults()
         self._solution[self._solution.SOLUTION_INFO] = {}
@@ -25,10 +25,11 @@ class Solver:
         self._presolver = prslv.PreSolver.build(presolver)
         self._solver = slv.Solver_algorithm.build(solver)
         self._postsolver = psslv.PostSolver.build(postsolver)
+        self._user_x0 = user_initial_values
 
     def solve(self):
         # Return the system solved in form of SolutionResults object.
-        initial_conditions = self._presolver.calculate_initial_conditions(self._circuit)
+        initial_conditions = self._presolver.calculate_initial_conditions(self._circuit, self._user_x0)
         self._solution[self._solution.SOLUTION_INFO][self._solution.X0] = initial_conditions
         sol = self._solver.solve(self._circuit, initial_conditions)
         for k, v in sol.items():

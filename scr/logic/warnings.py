@@ -21,3 +21,11 @@ class CircuitBuilderWarning(RuntimeWarning):
 
 class ComponentWarning(RuntimeWarning):
     pass
+
+
+class InitialValuesWarning(RuntimeWarning):
+    pass
+
+
+class PreSolverWarning(RuntimeWarning):
+    pass
