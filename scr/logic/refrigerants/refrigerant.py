@@ -83,7 +83,7 @@ class Refrigerant:
 
     def name(self):
         # Return a string.
-        return self._ref.fluid_names()[0]
+        return self._ref.name()
 
     # Refrigerant property limits. If there are no limit, return None.
     # TODO Coolprop 6.1.0 doesn't support check all limits. All not supported, are harcorded
