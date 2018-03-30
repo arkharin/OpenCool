@@ -307,7 +307,7 @@ class NodeInfo:
         if property_name in properties:
             return properties[property_name]
         else:
-            raise PropertyNameError('Property ' + str(property_name) + ' is not possible in ' + str(type(self)))
+            raise PropertyNameError(f"PropertyName {property_name} isn't possible in {type(self)}")
 
     def get_property_limit(self, prop):
         return self.get_property(prop).get_limits()
@@ -321,13 +321,14 @@ class NodeInfoFactory(metaclass=Singleton):
     @staticmethod
     def get(key, *args):
         if isinstance(key, Node):
-            return NodeInfo(key.get_refrigerant())
+            ref_object = key.get_refrigerant()
         elif isinstance(key, NodeBuilder):
             ref = key._ref
             ref_lib = key._ref_lib
-            return Refrigerant.build(ref_lib, ref)
+            ref_object = Refrigerant.build(ref_lib, ref)
         elif type(key) is str:
-            return Refrigerant.build(key, args[0])
+            ref_object = Refrigerant.build(args[0], key)
         else:
-            raise InfoFactoryError('NodeInfoFactory can\'t return a NodeInfo class with the argument passed: ' + key)
+            raise InfoFactoryError(f"NodeInfoFactory can't return a NodeInfo class with the argument passed: {key}")
 
+        return NodeInfo(ref_object)
