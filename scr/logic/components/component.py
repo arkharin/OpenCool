@@ -123,7 +123,7 @@ class Component(ABC):
                     if not hasattr(self, property_name):
                         setattr(self, property_name, None)
                     else:
-                        raise ValueError('Property %s has already been defined', property_name)
+                        raise ValueError(f"PropertyName {property_name} has already been defined")
 
                     if attribute._property_type == 'basic':
                         self._basic_eqs[property_name] = attribute
@@ -145,9 +145,9 @@ class Component(ABC):
                 elif property_name in self._auxiliary_eqs:
                     self._auxiliary_properties[property_name] = property_value
                 else:
-                    raise ValueError('_property_type unknown')
+                    raise ValueError("_property_type unknown")
             else:
-                raise ValueError('Property name unknown')
+                raise ValueError("PropertyName name unknown")
 
     def configure(self, nodes_dict):
         nodes_id = self._inlet_nodes
@@ -279,6 +279,7 @@ class AComponentSerializer(ABC):
         for node_id in cmp_data[self.OUTLET_NODES]:
             cmp.add_outlet_node(i, node_id)
             i += 1
+        # TODO The units are not chequed. In the builder neither.
         for key in cmp_data[self.BASIC_PROPERTIES]:
             cmp.set_attribute(key, cmp_data[self.BASIC_PROPERTIES][key])
         for key in cmp_data[self.AUXILIARY_PROPERTIES]:
@@ -462,7 +463,7 @@ class ComponentInfo:
 
     def _add_property(self, dict_to_save, property_name, property_value):
         if property_name in self._basic_properties_info or property_name in self._auxiliary_properties_info:
-            raise ValueError('Property ' + str(property_name) + ' has already been registered in ' + str(type(self)))
+            raise ValueError(f"PropertyName {property_name} has already been registered in {type(self)}")
 
         dict_to_save[property_name] = property_value
 
@@ -483,7 +484,7 @@ class ComponentInfo:
         if property_name in properties:
             return properties[property_name]
         else:
-            raise PropertyNameError('Property ' + str(property_name) + ' is not possible in ' + str(type(self)))
+            raise PropertyNameError(f"PropertyName {property_name} isn't possible in {type(self)}")
 
     def get_properties(self):
         return {**self.get_basic_properties(), **self.get_auxiliary_properties()}
