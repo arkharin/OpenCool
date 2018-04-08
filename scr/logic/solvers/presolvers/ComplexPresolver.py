@@ -496,7 +496,7 @@ class ComplexPresolver(PreSolver):
         else:
             return None
 
-    def _search_compressor(self, n_id, cmp_explored, compressors, n_to_explore) -> Optional[List[int, int]]:
+    def _search_compressor(self, n_id, cmp_explored, compressors, n_to_explore) -> Optional[List[int]]:
         """Return a node with a compressor and the position.
 
         :return [node_id, postion]. Postion: suction =0, discharge 1. If the branch has been explored, return None.
@@ -699,7 +699,7 @@ class ComplexPresolver(PreSolver):
                     else:
                         self._calculated_and_fill_mass_flow_of_flow_components(out_m, outlet_nodes, in_m, inlet_nodes)
 
-    def _sum_mass_flows(self, mass_flows: List[float, None]) -> float:
+    def _sum_mass_flows(self, mass_flows: List[float]) -> float:
         m_total = 0.0
         if None not in mass_flows:
             m_total = sum(mass_flows)
