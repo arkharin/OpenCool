@@ -37,6 +37,7 @@ def save(data, file_name, folder='', home_path=Path.home()):
             if _user_decision(user_input):
                 name = input('Write new file name: ')
                 fp = Path(home_path, folder, name)
+                fp = Path(home_path, folder, name + _EXTENSION)
             else:
                 break
         else:
