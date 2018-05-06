@@ -129,9 +129,9 @@ class SolutionResults(dict):
 
     @is_init
     def get_all_nodes(self):
-        nds = []
+        nds = {}
         for circuit in self.get_all_circuits():
-            nds += self.get_nodes(circuit)
+            nds = {**nds, **self.get_nodes(circuit)}
         return nds
 
     @is_init
@@ -144,9 +144,9 @@ class SolutionResults(dict):
 
     @is_init
     def get_all_components(self):
-        cmps = []
+        cmps = {}
         for circuit in self.get_all_circuits():
-            cmps += self.get_components(circuit)
+            cmps = {**cmps, **self.get_components(circuit)}
         return cmps
 
     @is_init
