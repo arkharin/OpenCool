@@ -78,3 +78,7 @@ class InfoError(RuntimeError):
 
 class ComponentDecoratorError(RuntimeError):
     pass
+
+
+class RefrigerantLibraryError(RuntimeError):
+    pass
