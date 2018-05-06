@@ -36,18 +36,6 @@ class PropertyValueError(RuntimeError):
     pass
 
 
-class ComponentBuilderError(RuntimeError):
-    pass
-
-
-class NodeBuilderError(RuntimeError):
-    pass
-
-
-class CircuitBuilderError(RuntimeError):
-    pass
-
-
 class BuildError(RuntimeError):
     pass
 
@@ -73,4 +61,20 @@ class InfoFactoryError(ValueError):
 
 
 class InitialValuesError(RuntimeError):
+    pass
+
+
+class NodeError(RuntimeError):
+    pass
+
+
+class ComponentError(RuntimeError):
+    pass
+
+
+class InfoError(RuntimeError):
+    pass
+
+
+class ComponentDecoratorError(RuntimeError):
     pass
