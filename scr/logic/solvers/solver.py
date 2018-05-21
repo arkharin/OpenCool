@@ -13,6 +13,7 @@ from scr.logic.errors import SolverError
 from scr.logic.circuit import Circuit
 from typing import Optional, Dict, Callable, List
 from scr.logic.initial_values import InitialValues
+import logging as log
 
 
 class Solver:
@@ -123,9 +124,13 @@ class SolutionResults(dict):
                 if self.is_solved():
                     return func(self, *args)
                 else:
-                    raise SolverError('Circuit not solved')
+                    msg = f"System is not solved."
+                    log.error(msg)
+                    raise SolverError(msg)
             except KeyError:
-                return SolverError('Circuit not solved')
+                msg = f"System is not solved."
+                log.error(msg)
+                raise SolverError(msg)
         return func_wrapper
 
     @is_init
