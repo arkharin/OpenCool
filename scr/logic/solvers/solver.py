@@ -10,11 +10,15 @@ import scr.logic.solvers.presolvers.presolver as prslv
 import scr.logic.solvers.solvers_algorithm.solver_algorithm as slv
 import scr.logic.solvers.postsolvers.postsolver as psslv
 from scr.logic.errors import SolverError
+from scr.logic.circuit import Circuit
+from typing import Optional, Dict, Callable, List
+from scr.logic.initial_values import InitialValues
 
 
 class Solver:
 
-    def __init__(self, circuit, presolver, solver, postsolver, user_initial_values=None):
+    def __init__(self, circuit: Circuit, presolver: str, solver: str, postsolver: str,
+                 user_initial_values: Optional[InitialValues]=None) -> None:
         self._circuit = circuit
         self._solution = SolutionResults()
         self._solution[self._solution.SOLUTION_INFO] = {}
@@ -27,8 +31,8 @@ class Solver:
         self._postsolver = psslv.PostSolver.build(postsolver)
         self._user_x0 = user_initial_values
 
-    def solve(self):
-        # Return the system solved in form of SolutionResults object.
+    def solve(self) -> 'SolutionResults':
+        """Solve the circuit."""
         initial_conditions = self._presolver.calculate_initial_conditions(self._circuit, self._user_x0)
         self._solution[self._solution.SOLUTION_INFO][self._solution.X0] = initial_conditions
         sol = self._solver.solve(self._circuit, initial_conditions)
@@ -38,7 +42,8 @@ class Solver:
         self._solution[self._solution.SOLUTION] = self._postsolver.post_solve(self._circuit)
         return self._solution
 
-    def _updated_circuit(self):
+    def _updated_circuit(self) -> None:
+        """Recalculated the circuit with the final values of the solver."""
         x = self._solution.get_final_values()
         nodes = self._circuit.get_nodes()
         i = 0
@@ -71,7 +76,7 @@ class SolutionResults(dict):
             presolver: (str) name of the presolver used.
             solver: (str) name of the solver used.
             postsolver: (str) name of the postsolver used.
-            x0: (list) The initial values for the independent variables.
+            x0: (list) The initial values used in the solver for the independent variables.
             x: (list) The final values for the independent variables.
             success: (bool) Whether or not the solver exited successfully.
             message: (str) Description of the cause of the termination.
@@ -108,7 +113,11 @@ class SolutionResults(dict):
     SOLVER_SPECIFIC = 'solver specific'
 
     # Decorator definition.
-    def is_init(func):
+    def is_init(func: Callable) -> Callable:
+        """Decorator. Check if circuit is solved or not.
+
+        :raise SolverError: if the circuit is not solved.
+        """
         def func_wrapper(self, *args):
             try:
                 if self.is_solved():
@@ -120,45 +129,51 @@ class SolutionResults(dict):
         return func_wrapper
 
     @is_init
-    def get_node(self, node):
+    def get_node(self, node: int) -> Dict:
         return self.get_all_nodes().get(node)
 
     @is_init
-    def get_nodes(self, circuit):
+    def get_nodes(self, circuit: int) -> Dict:
+        """All nodes results of a circuit."""
         return self.get_circuit(circuit)[self.NODES]
 
     @is_init
-    def get_all_nodes(self):
+    def get_all_nodes(self) -> Dict:
+        """All nodes results of the system."""
         nds = {}
         for circuit in self.get_all_circuits():
             nds = {**nds, **self.get_nodes(circuit)}
         return nds
 
     @is_init
-    def get_component(self, component):
+    def get_component(self, component: int) -> Dict:
         return self.get_all_components().get(component)
 
     @is_init
-    def get_components(self, circuit):
+    def get_components(self, circuit: int) -> Dict:
+        """"All components results of a circuit."""
         return self.get_circuit(circuit)[self.COMPONENTS]
 
     @is_init
-    def get_all_components(self):
+    def get_all_components(self) -> Dict:
+        """All components results of the system."""
         cmps = {}
         for circuit in self.get_all_circuits():
             cmps = {**cmps, **self.get_components(circuit)}
         return cmps
 
     @is_init
-    def get_circuit(self, circuit):
+    def get_circuit(self, circuit: int) -> Dict:
         return self[self.SOLUTION][circuit]
 
     @is_init
-    def get_all_circuits(self):
+    def get_all_circuits(self) -> Dict:
+        """All circuits results"""
         return self[self.SOLUTION]
 
     @is_init
-    def get_by_id(self, id_):
+    def get_by_id(self, id_: int) -> Optional[Dict]:
+        """Results of the id. Can be a circuit, a component or a node."""
         circ = self.get_all_circuits().get(id_)
         if circ is not None:
             return circ
@@ -171,57 +186,62 @@ class SolutionResults(dict):
         return None
 
     @is_init
-    def get_solution_info(self):
+    def get_solution_info(self) -> Dict:
+        """Additional information about the solution."""
         return self[self.SOLUTION_INFO]
 
-    def is_solved(self):
+    def is_solved(self) -> bool:
         # Can't be called get_solution_info because it will be recursive.
         return self[self.SOLUTION_INFO][self.SUCCESS]
 
     @is_init
-    def solver_error(self):
-        return self.get_solution_info()[self.RESIDUALS]
+    def solver_status(self) -> int:
+        """Termination status of the optimizer, depends on the underlying solver. Refer to message for details."""
+        return self.get_solution_info()[self.STATUS]
 
     @is_init
-    def get_initial_values(self):
+    def get_initial_values(self) -> List:
+        """The initial values used in the solver for the independent variables."""
         return self.get_solution_info()[self.X0]
 
     @is_init
-    def get_final_values(self):
+    def get_final_values(self) -> List:
+        """The final values for the independent variables."""
         return self.get_solution_info()[self.X]
 
     @is_init
-    def get_message_termination(self):
+    def get_message_termination(self) -> str:
+        """Description of the cause of the termination."""
         return self.get_solution_info()[self.MESSAGE]
 
     @is_init
-    def get_errors(self):
+    def get_errors(self) -> List:
+        """Residuals of the solution."""
         return self.get_solution_info()[self.RESIDUALS]
 
     @is_init
-    def get_maximum_error(self):
+    def get_maximum_error(self) -> float:
+        """The maximum residual (error)."""
         return self.get_solution_info()[self.MAXRS]
 
     @is_init
-    def get_solver_specific_info(self):
+    def get_solver_specific_info(self) -> Dict:
         return self.get_solution_info()[self.SOLVER_SPECIFIC]
 
     @is_init
-    def get_presolver(self):
+    def get_presolver(self) -> str:
         return self.get_solution_info()[self.PRESOLVER]
 
     @is_init
-    def get_solver(self):
+    def get_solver(self) -> str:
         return self.get_solution_info()[self.SOLVER]
 
     @is_init
-    def get_postsolver(self):
+    def get_postsolver(self) -> str:
         return self.get_solution_info()[self.POSTSOLVER]
 
-    def serialize(self):
+    def serialize(self) -> 'SolutionResults':
         return self
 
-    def deserialize(self, results_file):
+    def deserialize(self, results_file: Dict) -> Dict:
         return results_file
-
-
