@@ -9,7 +9,7 @@ import inspect
 from abc import ABC
 from scr.helpers.properties import StrRestricted, NumericProperty
 from scr.logic.errors import ComponentDecoratorError, ComponentError, BuildError, DeserializerError, InfoFactoryError, \
-    InfoError
+    InfoError, PropertyValueError
 from scr.logic.warnings import BuildWarning
 from scr.helpers.singleton import Singleton
 import logging as log
@@ -382,8 +382,15 @@ class AComponentSerializer(ABC):
 class ComponentBuilder:
     """Builder class for component."""
     def __init__(self, id_: int, component_type: str) -> None:
+        """
+        :raise BuildWaring: if component_type is not a string.
+        """
         self._id = id_
-        self._component_type = StrRestricted(component_type)
+        try:
+            self._component_type = StrRestricted(component_type)
+        except PropertyValueError as e:
+            log.warning(e)
+            raise BuildWarning(e)
         self._component_data = {}
         self._component_info = ComponentInfoFactory().get(self.get_component_type())
         self._inlet_nodes_id = [None] * self._component_info.get_inlet_nodes()
