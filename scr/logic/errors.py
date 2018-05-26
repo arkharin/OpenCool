@@ -16,7 +16,7 @@ class ValuePropertyError(ValueError):
 
 # TODO es el solver? el presolver? postSolver? Separar en Solver, Post, PreSolver error.
 # TODO Este justamente se utiliza en el circuito, al construirse. Buscar otro nombre.
-class CalculationError (RuntimeError):
+class CircuitError (RuntimeError):
     pass
 
 

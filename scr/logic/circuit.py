@@ -10,7 +10,7 @@ import scr.logic.components.component as cmp
 import scr.logic.nodes.node as nd
 import scr.logic.refrigerants.refrigerant as ref
 from scr.helpers.properties import StrRestricted
-from scr.logic.errors import PropertyValueError, BuildError, CalculationError, IdDuplicatedError, DeserializerError
+from scr.logic.errors import PropertyValueError, BuildError, CircuitError, IdDuplicatedError, DeserializerError
 from scr.logic.warnings import BuildWarning
 import logging as log
 from typing import Dict, List, Optional, Union
@@ -91,6 +91,9 @@ class Circuit:
 
     def _fill_nodes_with_mass_flow(self, id_mass_flow: int, node: nd.Node, stop_components: Dict[int, cmp.Component]) \
             -> None:
+        """
+        :raise: CircuitError.
+        """
         # Count added to force while to finish.
         i = 0
         while True:
@@ -105,7 +108,7 @@ class Circuit:
                 msg = f"Maximum iterations limit ({i}) reached in circuit  {self.get_id()} in " \
                        f"_fill_nodes_with_mass_flow method"
                 log.error(msg)
-                raise CalculationError(msg)
+                raise CircuitError(msg)
             else:
                 node = inlet_component.get_outlet_node(inlet_component.get_id_outlet_nodes()[0])
             i += 1
@@ -158,12 +161,12 @@ class Circuit:
         """Update mass flows with the floats in the list.
 
         :param mass_flows: mass flow of the circuit. List shall have the same length of the quantity of mass flow.
-        :raise: CalculationError.
+        :raise: CircuitError.
         """
         if len(mass_flows) != len(self.get_mass_flows()):
             msg = f"Try to updated mass {len(self.get_mass_flows())} with {len(mass_flows)} in circuit {self.get_id()}."
             log.error(msg)
-            raise CalculationError(msg)
+            raise CircuitError(msg)
         i = 0
         for mass_flow in mass_flows:
             self.get_mass_flows()[i] = mass_flow
