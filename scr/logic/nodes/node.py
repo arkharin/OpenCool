@@ -15,7 +15,7 @@ from scr.helpers.singleton import Singleton
 from scr.helpers.properties import NumericProperty
 import scr.logic.components.component as cmp
 import logging as log
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 
 
 class Node(ABC):
@@ -259,9 +259,13 @@ class ANodeSerializer:
 
 class NodeBuilder:
     """Builder class for Node."""
-    def __init__(self, id_: int, component_id_1: int, component_id_2: int) -> None:
+    def __init__(self, id_: int, component_id_1: Optional[int] = None, component_id_2: Optional[int] = None) -> None:
         self._id = id_
-        self._components_id = [component_id_1, component_id_2]
+        self._components_id = []
+        if component_id_1 is not None:
+            self._components_id.append(component_id_1)
+        if component_id_2 is not None:
+            self._components_id.append(component_id_2)
         # Only used for NodeInfoFactory. Allow to NodeInfoFactory accept a NodeBuilder object.
         self._ref = None
         self._ref_lib = None
@@ -305,7 +309,7 @@ class NodeBuilder:
         if component_id not in self._components_id:
             self._components_id.append(component_id)
         else:
-            msg = f"'Component {component_id} is already attached at the node {self.get_id()}."
+            msg = f"Component {component_id} is already attached at the node {self.get_id()}."
             log.warning(msg)
             raise BuildWarning(msg)
 

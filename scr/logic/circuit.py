@@ -202,10 +202,10 @@ class ACircuitSerializer:
         try:
             for node in circuit_file[ACircuitSerializer.NODES]:
                 new_node = node_deserialize.deserialize(node)
-                circuit.add_node(new_node)
+                circuit.create_node(new_node)
             for component in circuit_file[ACircuitSerializer.COMPONENTS]:
                 new_cmp = cmp_deserialize.deserialize(component)
-                circuit.add_component(new_cmp)
+                circuit.create_component(new_cmp)
 
             return circuit
         except DeserializerError as e:
@@ -353,29 +353,35 @@ class CircuitBuilder:
         for node_id in self.get_nodes():
             self.get_node(node_id)._set_refrigerant(refrigerant)
 
-    def add_node(self, component_id_1: int, component_id_2: int) -> nd.NodeBuilder:
+    def create_node(self, component_id_1: Optional[int] = None, component_id_2: Optional[int] = None) -> nd.NodeBuilder:
         """
          :raise BuildWarning
         """
-        if component_id_1 in self.get_components().keys() and component_id_2 in self.get_components().keys():
-            next_id = self._id_count.next
-            # NodeBuilder can raise a BuildWarning.
-            new_node = nd.NodeBuilder(next_id, component_id_1, component_id_2)
-            self._nodes[next_id] = new_node
-            refrigerant = self._refrigerant
-            if refrigerant is not None:
-                new_node._set_refrigerant(refrigerant)
-            ref_lib = self._ref_lib
-            if ref_lib is not None:
-                new_node._set_refrigerant_library(ref_lib)
-            return new_node
-        else:
-            msg = f"New node can't be added. One of the components passed ({component_id_1}, {component_id_2}) isn't " \
-                  f"in the circuit"
+        if component_id_1 is not None and component_id_1 not in self.get_components().keys():
+            msg = f"Component 1 with ({component_id_1} isn't in the circuit {self.get_id()} and it isn't attached to " \
+                  f"the node."
             log.warning(msg)
             raise BuildWarning(msg)
 
-    def add_node(self, new_node: nd.NodeBuilder) -> nd.NodeBuilder:
+        if component_id_2 is not None and component_id_2 not in self.get_components().keys():
+            msg = f"Component 2 with ({component_id_2} isn't in the circuit {self.get_id()} and it isn't attached to " \
+                   f"the node."
+            log.warning(msg)
+            raise BuildWarning(msg)
+
+        next_id = self._id_count.next
+        # NodeBuilder can raise a BuildWarning.
+        new_node = nd.NodeBuilder(next_id, component_id_1, component_id_2)
+        self._nodes[next_id] = new_node
+        refrigerant = self._refrigerant
+        if refrigerant is not None:
+            new_node._set_refrigerant(refrigerant)
+        ref_lib = self._ref_lib
+        if ref_lib is not None:
+            new_node._set_refrigerant_library(ref_lib)
+        return new_node
+
+    def create_node(self, new_node: nd.NodeBuilder) -> nd.NodeBuilder:
         """
          :raise BuildWarning
         """
@@ -423,13 +429,14 @@ class CircuitBuilder:
             log.warning(msg)
             raise BuildWarning(msg)
 
-    def add_component(self, component_type: Union[str, cmp.ComponentBuilder]) -> cmp.ComponentBuilder:
+    def create_component(self, component_type: Union[str, cmp.ComponentBuilder]) -> cmp.ComponentBuilder:
         """
         :raise BuildWarning
         """
         if isinstance(component_type, cmp.ComponentBuilder):
             self._id_count.add_used_id(component_type.get_id())
             self._components[component_type.get_id()] = component_type
+            return component_type
         else:
             next_id = self._id_count.next
             # ComponentBuilder can raise a BuildWarning.
