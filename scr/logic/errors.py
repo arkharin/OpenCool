@@ -3,20 +3,11 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 """
-Return error find in the program
+Return errors found in the program.
 """
 
 
-class TypeValueError(TypeError):
-    pass
-
-
-class ValuePropertyError(ValueError):
-    pass
-
-# TODO es el solver? el presolver? postSolver? Separar en Solver, Post, PreSolver error.
-# TODO Este justamente se utiliza en el circuito, al construirse. Buscar otro nombre.
-class CalculationError (RuntimeError):
+class CircuitError (RuntimeError):
     pass
 
 
@@ -24,27 +15,7 @@ class IdDuplicatedError(RuntimeError):
     pass
 
 
-class TypeComponentError(TypeError):
-    pass
-
-
-class PropertyNameError(NameError):
-    pass
-
-
 class PropertyValueError(RuntimeError):
-    pass
-
-
-class ComponentBuilderError(RuntimeError):
-    pass
-
-
-class NodeBuilderError(RuntimeError):
-    pass
-
-
-class CircuitBuilderError(RuntimeError):
     pass
 
 
@@ -56,15 +27,7 @@ class DeserializerError(RuntimeError):
     pass
 
 
-class PreSolverError(RuntimeError):
-    pass
-
-
 class SolverError(RuntimeError):
-    pass
-
-
-class PostSolverError(RuntimeError):
     pass
 
 
@@ -73,4 +36,24 @@ class InfoFactoryError(ValueError):
 
 
 class InitialValuesError(RuntimeError):
+    pass
+
+
+class NodeError(RuntimeError):
+    pass
+
+
+class ComponentError(RuntimeError):
+    pass
+
+
+class InfoError(RuntimeError):
+    pass
+
+
+class ComponentDecoratorError(RuntimeError):
+    pass
+
+
+class RefrigerantLibraryError(RuntimeError):
     pass

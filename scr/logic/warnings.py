@@ -7,19 +7,7 @@ Define warnings find in the program
 """
 
 
-class ComponentBuilderWarning(RuntimeWarning):
-    pass
-
-
-class NodeBuilderWarning(RuntimeWarning):
-    pass
-
-
-class CircuitBuilderWarning(RuntimeWarning):
-    pass
-
-
-class ComponentWarning(RuntimeWarning):
+class BuildWarning(RuntimeWarning):
     pass
 
 

@@ -9,27 +9,38 @@ Define the abstract class Presolver.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
+import logging as log
+from scr.logic.errors import SolverError
+from scr.logic.circuit import Circuit
+from scr.logic.initial_values import InitialValues
+from typing import List
 
 
 class PreSolver (ABC):
-    def __init__(self):
-        pass
-
     @staticmethod
-    def build(presolver_name):
+    def build(presolver_name: str) -> 'PreSolver':
+        """
+        :raise SolverError: if the presolver is not found.
+        """
         # Dynamic importing modules
         try:
             cmp = import_module('scr.logic.solvers.presolvers.' + presolver_name)
         except ImportError:
-            print('Error loading presolver. Type: %s is not found', presolver_name)
-            exit(1)
+            msg = f"Presolver {presolver_name} is not found."
+            log.error(msg)
+            raise SolverError(msg)
         # Only capitalize the first letter
         class_name = presolver_name.replace(presolver_name[0], presolver_name[0].upper(), 1)
         class_ = getattr(cmp, class_name)
         return class_()
 
     @abstractmethod
-    def calculate_initial_conditions(self, circuit, user_initial_values=None):
-        # Return a list with all nodes initialized with the pair of basic thermodynamic properties for node library and
-        # mass flows of the circuit.
+    def calculate_initial_conditions(self, circuit: Circuit, user_initial_values: InitialValues =None) -> List[float]:
+        """Calculate the initial conditions.
+
+        All nodes are initialized with the pair of basic thermodynamic properties for node library and mass flows of the
+        circuit.
+
+        :raise SolverError.
+        """
         pass

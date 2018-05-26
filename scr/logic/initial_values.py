@@ -72,7 +72,7 @@ class InitialValues:
 
     Ref = TypeVar('Ref', str, Node, NodeBuilder)
 
-    def __init__(self, refrigerant: Ref, ref_library: str ='CoolPropHeos'):
+    def __init__(self, refrigerant: Ref, ref_library: str ='CoolPropHeos') -> None:
         """
 
         :param refrigerant: refrigerant.
@@ -180,7 +180,7 @@ class InitialValues:
                     raise InitialValuesError(f"PropertyName {prop} is not correctly defined")
             else:
                 raise InitialValuesError(f"{value} must be between {self.get_property_info(prop)[0].get_limits()} for"
-                                           f" property {prop}")
+                                         f" property {prop}")
         else:
             raise InitialValuesWarning(f"PropertyName {prop} can't be used as initial value")
 
