@@ -8,12 +8,12 @@ Presolver for complex circuits like two stage circuits but not for cascade syste
 
 from scr.logic.solvers.presolvers.presolver import PreSolver
 from scr.logic.components.component import ComponentInfo as CmpInfo
-from scr.logic.errors import PreSolverError
-from scr.logic.warnings import PreSolverWarning
+from scr.logic.errors import SolverError
 from scr.logic.nodes.node import NodeInfo as NdInfo
 from scr.logic.circuit import Circuit
 from scr.logic.initial_values import InitialValues
 from typing import List, Union, Callable, Optional
+import logging as log
 
 
 class ComplexPresolver(PreSolver):
@@ -43,7 +43,7 @@ class ComplexPresolver(PreSolver):
     _M = NdInfo.MASS_FLOW
 
     def __init__(self, default_tc: float = 318.15, default_tsc: float = 10.0, default_te: float = 263.15,
-                 default_tsh: float = 10.0):
+                 default_tsh: float = 10.0) -> None:
         """Init of class. Default values used in default initial values calculation can be changed.
         :param default_tc: Condensation temperature for default initial values. Default= 45ºC.
         :param default_tsc: Subcooling for default initial values. Default= 10.0ºC. Initial subcooling
@@ -111,7 +111,9 @@ class ComplexPresolver(PreSolver):
         if self._are_initial_conditions_calculated(initial_conditions):
             return initial_conditions
         else:
-            raise PreSolverError("Presolver didn't calculated a initial value for all nodes and mass flows.")
+            msg = "Presolver didn't calculated a initial value for all nodes and mass flows."
+            log.error(msg)
+            raise SolverError(msg)
 
     def _fill_with_default_initial_values(self, cds, cps, evs, mfs, stop_cmps, xvs):
         # With pressure.
@@ -218,8 +220,8 @@ class ComplexPresolver(PreSolver):
                 elif direction is self._BWD:
                     n_to_fill = self._circuit.get_component(cmp_id).get_id_inlet_nodes()
                 else:
-                    raise PreSolverError(f"Traverse direction for physic property {physic_property} isn't recognize. "
-                                         f"Direction = {direction}")
+                    log.warning(f"Traverse direction for physic property {physic_property} isn't recognize. Direction ="
+                                f" {direction}")
                 # Value to fill nodes.
                 if callable(calc_value):
                     value = calc_value(self._circuit.get_component(cmp_id))
@@ -262,8 +264,10 @@ class ComplexPresolver(PreSolver):
                 elif direction is self._BWD:
                     nodes_id = self._circuit.get_component(c).get_id_inlet_nodes()
                 else:
-                    raise PreSolverError(f"Traverse direction for physic property{physic_property} is not recognize. "
-                                         f"Direction = {direction}")
+                    msg = f"Traverse direction for physic property{physic_property} is not recognize. Direction = " \
+                          f"{direction}"
+                    log.error(msg)
+                    raise SolverError(msg)
                 node_id = nodes_id.pop()
                 n_not_filled.remove(node_id)
                 if len(nodes_id) > 0:
@@ -323,7 +327,9 @@ class ComplexPresolver(PreSolver):
         elif prop is self._Q:
             value = self._calculate_q_node(nd_id)
         else:
-            raise PreSolverError(f"ComplexPresolver: PropertyName {prop} isn't recognized")
+            msg = f"ComplexPresolver: PropertyName {prop} isn't recognized."
+            log.error(msg)
+            raise SolverError(msg)
 
         if value is not None:
             return value
@@ -669,8 +675,8 @@ class ComplexPresolver(PreSolver):
                         if self._mass_flows[id_mass_flow] is None:
                             self._mass_flows[id_mass_flow] = m0
                         else:
-                            raise PreSolverWarning(f"Node {node_id} has already an initial mass flow. New mass flow "
-                                                   f"won't be used""")
+                            raise log.warning(f"Node {node_id} has already an initial mass flow. New mass flow won't be"
+                                              f" used.")
         if self._mass_flows.count(None) == len(self._mass_flows):
             node = self._circuit.get_node()
             id_mass_flow = node.get_id_mass_flow()
@@ -680,7 +686,9 @@ class ComplexPresolver(PreSolver):
         iterations = 1
         while iterations > 0:
             if iterations > 1000:
-                raise PreSolverError("Mass flows calculation in ComplexPresolver is not converging")
+                msg = "Mass flows calculation in ComplexPresolver is not converging."
+                log.error(msg)
+                raise SolverError(msg)
             iterations -= 1
             for flow_component in flow_components:
                 flow_component = self._circuit.get_component(flow_component)

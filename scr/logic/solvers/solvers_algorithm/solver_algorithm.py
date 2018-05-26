@@ -8,33 +8,41 @@ Define the abstract class Solver_algorithm.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
+import logging as log
+from scr.logic.errors import SolverError
+from scr.logic.circuit import Circuit
+from typing import List, Dict
 
 
 class Solver_algorithm (ABC):
-    def __init__(self):
-        pass
-
     @staticmethod
-    def build(solver_name):
+    def build(solver_name: str) -> 'Solver_algorithm':
+        """
+        :raise SolverError: if the solver algorithm is not found.
+        """
         # Dynamic importing modules
         try:
             cmp = import_module('scr.logic.solvers.solvers_algorithm.' + solver_name)
         except ImportError:
-            print('Error loading solver. Type: %s is not found', solver_name)
-            exit(1)
+            msg = f"Solver {solver_name} is not found."
+            log.error(msg)
+            raise SolverError(msg)
         # Only capitalize the first letter
         class_name = solver_name.replace(solver_name[0], solver_name[0].upper(), 1)
         class_ = getattr(cmp, class_name)
         return class_()
 
     @abstractmethod
-    def solve(self, circuit, initial_conditions, **kwargs):
-        # Return a dict with the items follwing items defined in SoltionResults: x, success, message, residuals, maxrs,
-        # status, solver specific
+    def solve(self, circuit: Circuit, initial_conditions: List[float], **kwargs) -> Dict:
+        """Solve the circuit.
+
+        Return the items defined in SoltionResults: x, success, message, residuals, maxrs, status and solver specific.
+        """
         pass
 
     # Shared functions between solvers algorithms.
-    def _updated_circuit(self, x, circuit):
+    def _updated_circuit(self, x: List[float], circuit: Circuit) -> None:
+        """Updated the circuit with the values of the independent variables."""
         nodes = circuit.get_nodes()
         i = 0
         for node in nodes:

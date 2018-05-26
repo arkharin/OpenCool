@@ -34,13 +34,22 @@ class Solver:
 
     def solve(self) -> 'SolutionResults':
         """Solve the circuit."""
-        initial_conditions = self._presolver.calculate_initial_conditions(self._circuit, self._user_x0)
+        try:
+            initial_conditions = self._presolver.calculate_initial_conditions(self._circuit, self._user_x0)
+        except SolverError as e:
+            self._solution[self._solution.SOLUTION_INFO][self._solution.SUCCESS] = False
+            self._solution[self._solution.SOLUTION_INFO][self._solution.MESSAGE] = e
         self._solution[self._solution.SOLUTION_INFO][self._solution.X0] = initial_conditions
         sol = self._solver.solve(self._circuit, initial_conditions)
         for k, v in sol.items():
             self._solution[self._solution.SOLUTION_INFO][k] = v
         self._updated_circuit()
-        self._solution[self._solution.SOLUTION] = self._postsolver.post_solve(self._circuit)
+        try:
+            self._solution[self._solution.SOLUTION] = self._postsolver.post_solve(self._circuit)
+        except SolverError as e:
+            self._solution[self._solution.SOLUTION_INFO][self._solution.SUCCESS] = False
+            self._solution[self._solution.SOLUTION_INFO][self._solution.MESSAGE] = e
+
         return self._solution
 
     def _updated_circuit(self) -> None:

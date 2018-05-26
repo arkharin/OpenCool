@@ -9,11 +9,15 @@ Postsolver for circuit
 
 from scr.logic.solvers.postsolvers.postsolver import PostSolver
 from scr.logic.solvers.solver import SolutionResults as SR
+from scr.logic.circuit import Circuit
+from scr.logic.components.component import Component
+from scr.logic.nodes.node import Node
+from typing import Dict
 
 
 class Postsolver_v01(PostSolver):
 
-    def post_solve(self, circuit):
+    def post_solve(self, circuit: Circuit) -> Dict:
         cir_id = circuit.get_id()
         circuit_solved = {SR.NODES: {}, SR.COMPONENTS: {}}
         for node in circuit.get_nodes():
@@ -26,7 +30,7 @@ class Postsolver_v01(PostSolver):
 
         return {cir_id: circuit_solved}
 
-    def _get_node_results(self, node):
+    def _get_node_results(self, node: Node) -> Dict:
         # Return dict with thermodynamic properties evaluated. Keys are global name of the properties.
         n_info = node.get_node_info()
         results = {}
@@ -41,12 +45,12 @@ class Postsolver_v01(PostSolver):
                                      SR.UNIT: n_info.get_property(n_info.MASS_FLOW).get_unit()}
         return results
 
-    def _get_component_results(self, component):
+    def _get_component_results(self, component: Component) -> Dict:
         basic_properties = self._serialize_properties(component, component.get_basic_properties())
         aux_properties = self._serialize_properties(component, component.get_auxiliary_properties())
         return {SR.BASIC_PROPERTIES: basic_properties, SR.AUXILIARY_PROPERTIES: aux_properties}
 
-    def _serialize_properties(self, component, properties):
+    def _serialize_properties(self, component: Component, properties: Dict) -> Dict:
         cmp_info = component.get_component_info()
         results = {}
         for i in properties:

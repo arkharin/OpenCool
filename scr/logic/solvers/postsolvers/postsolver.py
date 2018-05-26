@@ -8,27 +8,34 @@ Define the abstract class PostSolver.
 
 from abc import ABC, abstractmethod
 from importlib import import_module
+from scr.logic.errors import SolverError
+from scr.logic.circuit import Circuit
+from typing import Dict
+import logging as log
 
 
 class PostSolver (ABC):
-    def __init__(self):
-        pass
-
     @staticmethod
-    def build(postsolver_name):
+    def build(postsolver_name: str) -> 'PostSolver':
+        """
+        :raise SolverError: if the postsolver is not found.
+        """
         # Dynamic importing modules
         try:
             cmp = import_module('scr.logic.solvers.postsolvers.' + postsolver_name)
         except ImportError:
-            print('Error loading postsolver. Type: %s is not found', postsolver_name)
-            exit(1)
+            msg = f"Postsolver {postsolver_name} is not found."
+            log.error(msg)
+            raise SolverError(msg)
         # Only capitalize the first letter
         class_name = postsolver_name.replace(postsolver_name[0], postsolver_name[0].upper(), 1)
         class_ = getattr(cmp, class_name)
         return class_()
 
     @abstractmethod
-    def post_solve(self, circuit):
-        # Return the solution items of SolutionResults. Is who calculate all desired properties, like thermodynamic
-        # properties of the nodes, the basic and the auxiliary properties or the change of the units of the results.
+    def post_solve(self, circuit: Circuit) -> Dict:
+        """Calculate the solution for all the system.
+        Calculated all desired properties, like thermodynamic properties of the nodes, the the basic and the auxiliary
+        properties or the change of the units of the results. Is the information saved as solution in SolutionResults.
+        """
         pass

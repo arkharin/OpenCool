@@ -47,15 +47,18 @@ from scipy.optimize import least_squares
 from scr.logic.solvers.solvers_algorithm.solver_algorithm import Solver_algorithm
 from scr.logic.nodes.node import NodeInfoFactory, NodeInfo
 from scr.logic.solvers.solver import SolutionResults as SR
+from typing import List, Dict
+from scr.logic.circuit import Circuit
+import logging as log
 
 
 class LeastSquares(Solver_algorithm):
 
-    def __init__(self):
+    def __init__(self) -> None:
         super().__init__()
         self._solution = None
 
-    def solve(self, circuit, initial_conditions, **kwargs):
+    def solve(self, circuit: Circuit, initial_conditions: List[float], **kwargs) -> Dict:
         # Transform to numpy array.
         ndarray_initial_conditions = np.array(initial_conditions)
         # Calculated lower and upper bounds of the independent variables.
@@ -67,7 +70,16 @@ class LeastSquares(Solver_algorithm):
         flows_quantity = len(circuit.get_mass_flows())
         bnds = self._calc_bounds(lim_value_prop1, lim_value_prop2, nodes_quantity, lim_mass_flow, flows_quantity)
         # Call the least squares algorithm.
-        self._solution = least_squares(self._get_equations_error, ndarray_initial_conditions, args=(circuit,), bounds=bnds)
+        try:
+            self._solution = least_squares(self._get_equations_error, ndarray_initial_conditions, args=(circuit,),
+                                           bounds=bnds)
+        except Exception as e:
+            msg = e
+            log.error(e)
+            solution = {SR.SUCCESS: False}
+            solution[SR.MESSAGE] = msg
+            return solution
+
         return self._adapt_solution_to_solution_results()
 
     def _calc_bounds(self, lim_value_prop1, lim_value_prop2, nodes_quantity, lim_mass_flow, flows_quantity):
@@ -113,7 +125,5 @@ class LeastSquares(Solver_algorithm):
         solution_adapted[SR.SOLVER_SPECIFIC]['njev'] = self._solution['njev']
         solution_adapted[SR.SOLVER_SPECIFIC]['optimality'] = self._solution['optimality']
         solution_adapted[SR.SOLVER_SPECIFIC]['grad'] = list(self._solution['grad'])
-
-
 
         return solution_adapted
