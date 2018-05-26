@@ -612,7 +612,7 @@ class ComponentInfo:
             - EVAPORATOR
             - EXPANSION_VALVE
             - MIXER_FLOW: mixing flow components, for example a T. Only with 1 outlet but with  N>1 inlets.
-            - OTHER: piping and piping components.
+            - PIPING: piping and piping components.
             - SEPARATOR_FLOW: separating flow components, for example a T. With N>1 outlets but only 1 inlet.
             - TWO_INLET_HEAT_EXCHANGER
 
@@ -626,7 +626,7 @@ class ComponentInfo:
     MIXER_FLOW = 'mixer_flow'
     SEPARATOR_FLOW = 'separator_flow'
     TWO_INLET_HEAT_EXCHANGER = 'two_inlet_heat_exchanger'
-    OTHER = 'other'
+    PIPING = 'piping'
 
     def __init__(self, component_key: str, component_class: Component, component_type: str, component_version: int =1,
                  updater_data_func: Callable =None, inlet_nodes: int =1, outlet_nodes: int =1):

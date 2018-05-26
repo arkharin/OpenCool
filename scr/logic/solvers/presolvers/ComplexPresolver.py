@@ -31,7 +31,7 @@ class ComplexPresolver(PreSolver):
     _MIXER_FLOW = CmpInfo.MIXER_FLOW
     _SEPARATOR_FLOW = CmpInfo.SEPARATOR_FLOW
     _TWO_INLET_HEAT_EXCHANGER = CmpInfo.TWO_INLET_HEAT_EXCHANGER
-    _OTHER = CmpInfo.OTHER
+    _PIPING = CmpInfo.PIPING
     # Thermodynamic properties
     _P = NdInfo.PRESSURE
     _T = NdInfo.TEMPERATURE
@@ -78,7 +78,7 @@ class ComplexPresolver(PreSolver):
         mfs = circuit.get_components_by_type(self._MIXER_FLOW)
         sfs = circuit.get_components_by_type(self._SEPARATOR_FLOW)
         tihtxs = circuit.get_components_by_type(self._TWO_INLET_HEAT_EXCHANGER)
-        ots = circuit.get_components_by_type(self._OTHER)
+        ots = circuit.get_components_by_type(self._PIPING)
 
         # Components to stop filling the line with the value indicated.
         stop_cmps = {self._P: {**cps, **cds, **evs, **xvs}}
