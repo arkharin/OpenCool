@@ -19,6 +19,10 @@ class PropertyValueError(RuntimeError):
     pass
 
 
+class BuildError(RuntimeError):
+    pass
+
+
 class DeserializerError(RuntimeError):
     pass
 
