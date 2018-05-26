@@ -9,11 +9,12 @@ Model implementation
 import json
 from pathlib import Path
 import logging as log
+from typing import Dict
 
 _EXTENSION = '.json'
 
 
-def save(data, name, folder='', home_path=Path.home()):
+def save(data: Dict, name: str, folder: str ='', home_path: str = Path.home()) -> None:
     fp = Path(home_path, folder)
     log.debug(f"Saving information in the file: {fp}")
     while True:
@@ -58,7 +59,7 @@ def save(data, name, folder='', home_path=Path.home()):
     log.info("File saved successfully!")
 
 
-def load(name, folder='', home_path=Path.home()):
+def load(name: str, folder: str ='', home_path: str =Path.home()):
     # Check home_path
     fp = Path(home_path, folder, name + _EXTENSION)
     log.debug(f"Loading file: {fp}")
