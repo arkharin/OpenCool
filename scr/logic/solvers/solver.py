@@ -91,7 +91,7 @@ class SolutionResults(dict):
             success: (bool) Whether or not the solver exited successfully.
             message: (str) Description of the cause of the termination.
             residuals: (list) Vector of residuals at the solution.
-            maxrs: (float) The maximum residual.
+            maxrs: (float) The maximum absoulte residual.
             status: (int) Termination status of the optimizer. Its value depends on the underlying solver.
                     Refer to message for details.
             solver specific: (dict) other information specific of the solver.
