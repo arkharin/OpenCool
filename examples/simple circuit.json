@@ -1,0 +1,359 @@
+{
+    "components": [
+        {
+            "auxiliary properties": {},
+            "basic properties": {
+                "cooling_power": 1.0,
+                "pressure_lose": 0.0,
+                "saturation_temperature": 263.15,
+                "superheating": 11.0
+            },
+            "id": 8,
+            "inlet nodes": [
+                7
+            ],
+            "outlet nodes": [
+                2
+            ],
+            "type": "theoretical_evaporator",
+            "version": 1
+        },
+        {
+            "auxiliary properties": {
+                "volumetric_efficiency": 0.8
+            },
+            "basic properties": {
+                "isentropic_efficiency": 0.7
+            },
+            "id": 1,
+            "inlet nodes": [
+                2
+            ],
+            "outlet nodes": [
+                3
+            ],
+            "type": "isentropic_compressor",
+            "version": 1
+        },
+        {
+            "auxiliary properties": {},
+            "basic properties": {
+                "pressure_lose": 0.0,
+                "saturation_temperature": 308.15,
+                "subcooling": 12.0
+            },
+            "id": 4,
+            "inlet nodes": [
+                3
+            ],
+            "outlet nodes": [
+                5
+            ],
+            "type": "theoretical_condenser",
+            "version": 1
+        },
+        {
+            "auxiliary properties": {},
+            "basic properties": {},
+            "id": 6,
+            "inlet nodes": [
+                5
+            ],
+            "outlet nodes": [
+                7
+            ],
+            "type": "theoretical_expansion_valve",
+            "version": 1
+        }
+    ],
+    "id": 0,
+    "initial values": {
+        "2": {
+            "Saturation temperature": [
+                273.15
+            ],
+            "Temperature": [
+                298.15
+            ],
+            "Thermal power": [
+                0.5,
+                7
+            ]
+        }
+    },
+    "nodes": [
+        {
+            "components": [
+                1,
+                8
+            ],
+            "id": 2
+        },
+        {
+            "components": [
+                1,
+                4
+            ],
+            "id": 3
+        },
+        {
+            "components": [
+                4,
+                6
+            ],
+            "id": 5
+        },
+        {
+            "components": [
+                6,
+                8
+            ],
+            "id": 7
+        }
+    ],
+    "refrigerant": "R134a",
+    "refrigerant_library": "CoolPropHeos",
+    "solution": {
+        "0": {
+            "components": {
+                "1": {
+                    "auxiliary properties": {
+                        "volumetric_efficiency": {
+                            "unit": null,
+                            "value": 0.06992927723048006
+                        }
+                    },
+                    "basic properties": {
+                        "isentropic_efficiency": {
+                            "unit": null,
+                            "value": 0.699999999999996
+                        }
+                    }
+                },
+                "4": {
+                    "auxiliary properties": {},
+                    "basic properties": {
+                        "pressure_lose": {
+                            "unit": "kPa",
+                            "value": -6.868503987789154e-12
+                        },
+                        "saturation_temperature": {
+                            "unit": "K",
+                            "value": 308.1499999999999
+                        },
+                        "subcooling": {
+                            "unit": "K",
+                            "value": 12.000000000000227
+                        }
+                    }
+                },
+                "6": {
+                    "auxiliary properties": {},
+                    "basic properties": {}
+                },
+                "8": {
+                    "auxiliary properties": {},
+                    "basic properties": {
+                        "cooling_power": {
+                            "unit": "kW",
+                            "value": 1.0
+                        },
+                        "pressure_lose": {
+                            "unit": "kPa",
+                            "value": 1.909211277961731e-11
+                        },
+                        "saturation_temperature": {
+                            "unit": "K",
+                            "value": 263.1499999999999
+                        },
+                        "superheating": {
+                            "unit": "K",
+                            "value": 11.000000000000057
+                        }
+                    }
+                }
+            },
+            "nodes": {
+                "2": {
+                    "-1": {
+                        "unit": "kg/s",
+                        "value": 0.005871491738602165
+                    },
+                    "19": {
+                        "unit": "K",
+                        "value": 274.15
+                    },
+                    "20": {
+                        "unit": "Pa",
+                        "value": 200603.30747268535
+                    },
+                    "21": {
+                        "unit": "",
+                        "value": -1.0
+                    },
+                    "33": {
+                        "unit": "kg/m3",
+                        "value": 9.527974197184614
+                    },
+                    "34": {
+                        "unit": "J/kg",
+                        "value": 402031.8286104903
+                    },
+                    "35": {
+                        "unit": "J/kg*K",
+                        "value": 1768.2226941669082
+                    }
+                },
+                "3": {
+                    "-1": {
+                        "unit": "kg/s",
+                        "value": 0.005871491738602165
+                    },
+                    "19": {
+                        "unit": "K",
+                        "value": 338.25332860466204
+                    },
+                    "20": {
+                        "unit": "Pa",
+                        "value": 886980.983608362
+                    },
+                    "21": {
+                        "unit": "",
+                        "value": -1.0
+                    },
+                    "33": {
+                        "unit": "kg/m3",
+                        "value": 36.68888844849935
+                    },
+                    "34": {
+                        "unit": "J/kg",
+                        "value": 448728.54463188956
+                    },
+                    "35": {
+                        "unit": "J/kg*K",
+                        "value": 1810.4969601523305
+                    }
+                },
+                "5": {
+                    "-1": {
+                        "unit": "kg/s",
+                        "value": 0.005871491738602165
+                    },
+                    "19": {
+                        "unit": "K",
+                        "value": 296.1499999999999
+                    },
+                    "20": {
+                        "unit": "Pa",
+                        "value": 886980.9836083689
+                    },
+                    "21": {
+                        "unit": "",
+                        "value": -1000.0
+                    },
+                    "33": {
+                        "unit": "kg/m3",
+                        "value": 1215.746823325578
+                    },
+                    "34": {
+                        "unit": "J/kg",
+                        "value": 231717.3592184118
+                    },
+                    "35": {
+                        "unit": "J/kg*K",
+                        "value": 1109.7870212363193
+                    }
+                },
+                "7": {
+                    "-1": {
+                        "unit": "kg/s",
+                        "value": 0.005871491738602165
+                    },
+                    "19": {
+                        "unit": "K",
+                        "value": 263.150000000005
+                    },
+                    "20": {
+                        "unit": "Pa",
+                        "value": 200603.30747270444
+                    },
+                    "21": {
+                        "unit": "",
+                        "value": 0.2185810301125573
+                    },
+                    "33": {
+                        "unit": "kg/m3",
+                        "value": 44.72807363659082
+                    },
+                    "34": {
+                        "unit": "J/kg",
+                        "value": 231717.35921841185
+                    },
+                    "35": {
+                        "unit": "J/kg*K",
+                        "value": 1121.7317421618134
+                    }
+                }
+            }
+        }
+    },
+    "solution info": {
+        "maxrs": 1.909211277961731e-11,
+        "message": "`xtol` termination condition is satisfied.",
+        "postsolver": "postsolver_v01",
+        "presolver": "ComplexPresolver",
+        "residuals": [
+            0.0,
+            -1.909211277961731e-11,
+            5.684341886080802e-14,
+            -5.684341886080802e-14,
+            3.9968028886505635e-15,
+            6.868503987789154e-12,
+            5.684341886080802e-14,
+            -2.2737367544323206e-13,
+            -5.684341886080802e-14
+        ],
+        "solver": "LeastSquares",
+        "solver specific": {
+            "cost": 2.0587487843984558e-22,
+            "grad": [
+                -1.6336517296740024e-11,
+                -3.776714657380893e-10,
+                -2.4701868179973358e-11,
+                -1.436312255627203e-10,
+                4.539416789845097e-09,
+                1.189574537709185e-09,
+                1.5135683148249426e-10,
+                -5.921180982133786e-14,
+                0.0
+            ],
+            "nfev": 51,
+            "njev": 45,
+            "optimality": 1.4462214653289345e-06
+        },
+        "status": 3,
+        "success": true,
+        "x": [
+            274.15,
+            9.527974197184614,
+            338.25332860466204,
+            36.68888844849935,
+            296.1499999999999,
+            1215.746823325578,
+            263.150000000005,
+            44.72807363659082,
+            0.005871491738602165
+        ],
+        "x0": [
+            298.15,
+            12.841125817564116,
+            328.1500000000009,
+            53.69024279318397,
+            308.1500000000019,
+            1169.5337511714192,
+            273.1499999999998,
+            56.57765250751967,
+            2.909286536894249e-09
+        ]
+    }
+}
