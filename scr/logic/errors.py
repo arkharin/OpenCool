@@ -57,3 +57,7 @@ class ComponentDecoratorError(RuntimeError):
 
 class RefrigerantLibraryError(RuntimeError):
     pass
+
+
+class ModelError(RuntimeError):
+    pass

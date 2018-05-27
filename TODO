@@ -1,0 +1,39 @@
+TODO List:
+
+Big items (not ordered by importance):
+1- More than one circuit (cascade system).
+2- two stage compressors.
+3- Units support:
+    Use a decorator in the builder class that changes the input from in the user unit to core units. All information is
+    saved in core units not in the user units. For gets, use the same decorator to destransform the units. The unit
+    transformation is made when the user wants to see that value.
+    Pros:
+        1- No potential unit problems inside the program. All is happens before, in the decorator.
+        2- Clean. Transparent for both ui and core program. The decorator read the current units defined in the ui
+            preferences and changed them to core units. In case of the ui wants use another unit for in a particular
+            case, can use the same decorator to change from this custom unit to the default units defined in the ui
+            preferences.
+            Example: The cooling power of a condenser is defined in the ui in BTU/hr, in the UI preferences de power is
+            defined in kW and in the component plugin in W. The ui decorator changes from BTU/hr to kW and the builder
+            decorator from kW to W.
+        3- Save consistent. The information is always stored in the core units. It is easier to compare to files. The
+            units will change when the user require the property. Another advantage is that two computers with different
+            units preferences will open the file in their units preference and not in the units from the original user.
+        4- Easy to implement. Builder class and UI the only affected.
+    Cons:
+        1- Small errors introduced in the change of the units. For example, 45ºF will never store exactly.
+
+    note: it is very likely that components plugin will required an updated. The library used can required the require
+    change the unit field in the component plugin.
+
+4- Components properties values not constant, implement equations. For example, use a equation for isentropic efficiency
+
+Small items:
+3- Add default tests.
+4- Define the dependencies (python 3.6 (type hints = 3.5, literal strings= 3.6, coolprop, numpy, scipy)
+6- Refrigerant library -> in the builder, the backend need use the coolprop information rather than compare with and
+                            predefined string and the refrigerants plugins register the supported library.
+
+
+Wishlist:
+1- Support true advance properties in initial values.

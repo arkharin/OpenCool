@@ -14,6 +14,8 @@ from scr.logic.initial_values import InitialValues
 import logging as log
 import platform as plat
 import pkg_resources
+from scr.logic.errors import ModelError
+import argparse
 
 
 def configure_logs(log_level=log.DEBUG):
@@ -30,8 +32,31 @@ def configure_logs(log_level=log.DEBUG):
 # Logs for the program:
 configure_logs()
 
-# General information about system and OpenCool.
+# Parse commandline arguments
+parser = argparse.ArgumentParser()
+parser.add_argument("system_name", help="Name of the system file.")
+parser.add_argument("-ld", "--load_directory", help="Directory (specified from the root) where folder are stored. The default"
+                                              "is the OpenCool program directory.")
+parser.add_argument("-lf", "--load_folder", help="Folder (specified from the directory) where systems are stored. The "
+                                           "default is examples.")
+parser.add_argument("-sd", "--save_directory", help="Directory (specified from the root) where folder will be stored. "
+                                                    "The default is the OpenCool program directory.")
+parser.add_argument("-sf", "--save_folder", help="Folder (specified from the directory) where systems will be stored. "
+                                                 "The default is examples.")
+parser.add_argument("-p", "--plugins_directory", help="Folder where plugins are stored.")
+parser.add_argument("-s", "--save_system_name", help="Folder where plugins are stored.")
 
+args = parser.parse_args()
+
+load_system_filename = args.system_name
+load_system_directory = args.load_directory if args.load_directory is not None else Path.cwd().parent
+load_system_folder = args.load_folder if args.load_folder is not None else "examples"
+plugins_directory = args.plugins_directory  # None if the argument doesn't exist
+save_system_directory = args.save_directory if args.save_directory is not None else Path.cwd().parent
+save_system_folder = args.save_folder if args.save_folder is not None else "examples"
+save_system_name = args.save_system_name if args.save_system_name is not None else args.system_name
+
+# General information about system and OpenCool.
 log.debug(f"Operating system: {plat.system()}")
 log.debug(f"Platform: {plat.platform()}")
 log.debug(f"Python version: {plat.python_version()}")
@@ -65,39 +90,44 @@ log.info("Core plugins loaded.")
 
 # Non-core plugins directory can be loaded too
 log.info("Loading non-core plugins.")
-plugins_directory = None  # '/foo/bar/'
 if plugins_directory is not None:
     # Add plugins directory to sys path
     sys.path.insert(0, plugins_directory)
     _load_plugins_from_directory(plugins_directory, use_working_directory_as_reference=False)
 log.info("Non-core plugins loaded.")
 
-
+# Load system
 log.info("Loading system.")
-#load_circuit = load('simple circuit complex presolver', 'OpenCool circuits')
-#load_circuit = load('two stage circuit complex presolver', 'OpenCool circuits')
-#load_circuit = load('simple circuit initial values', 'OpenCool circuits')
-#load_circuit = load('two stage circuit initial values', 'OpenCool circuits')
-load_circuit = load('test', 'OpenCool circuits')
-log.debug("System file loaded successfully.")
-#presolver = 'presolver_v01'  #Deprecated
-presolver ='ComplexPresolver'
-#presolver = 'OldComplexPresolver'
-#solver = 'Root'  #Old simple circuit solver
-solver = 'LeastSquares'
+try:
+    load_system = load(load_system_filename, load_system_folder, load_system_directory)
+except ModelError as e:
+    print(e)
+    print("Program can't continue and ends.")
+    sys.exit(1)
 
+log.debug("System file loaded successfully.")
+
+# Solvers
+presolver ='ComplexPresolver'
+solver = 'LeastSquares'
 postsolver = 'postsolver_v01'
 
 log.debug("Deserializing system.")
+
+# Information serializers
 ser = circ.ACircuitSerializer()
-circuit = ser.deserialize(load_circuit)
-x0 = InitialValues.deserialize(load_circuit)
-#x0 = None
+circuit = ser.deserialize(load_system)
+x0 = InitialValues.deserialize(load_system)
+
 log.debug("System deserialized successfully.")
+
+# Building the system
 log.debug("Building system")
 circuit = circuit.build()
 log.debug("System built successfully.")
 log.info("System loaded successfully.")
+
+# Solve
 log.info("Solving system.")
 solver = Solver(circuit, presolver, solver, postsolver, x0)
 solution = solver.solve()
@@ -106,6 +136,7 @@ log.info(f"Is system solved?: {solution.is_solved()}")
 log.debug(f"The error is:\n {solution.get_errors()}")
 log.debug(f"The maximum error is: {solution.get_maximum_error()}")
 
+# Save the results
 log.info("Saving system.")
 log.debug("Serializing system.")
 circuit_serialized = ser.serialize(circuit)
@@ -115,15 +146,9 @@ log.debug("System serialized.")
 log.debug("Saving serialized system.")
 data_to_save = {**circuit_serialized, **solution_serialized, **inital_values_serialized}
 
-#save(data_to_save, 'simple circuit complex presolver', 'OpenCool circuits')
-#save(data_to_save, 'one compressor-two evaporators complex presolver solved', 'OpenCool circuits')
-#save(circuit_serialized, 'test', 'OpenCool circuits')
-# save(solution_serialized, 'test', 'OpenCool circuits')
-#save(data_to_save, 'simple circuit initial values solved', 'OpenCool circuits')
-#save(data_to_save, 'two stage circuit initial values solved', 'OpenCool circuits')
+# File name and location to save.
+save(data_to_save, save_system_name, save_system_folder, save_system_directory)
 
-# TODO hay TODO en el circuito!!
-save(data_to_save, 'test', 'OpenCool circuits')
 log.info("System saved.")
 log.info("Program end.")
 

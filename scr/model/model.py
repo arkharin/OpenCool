@@ -10,6 +10,7 @@ import json
 from pathlib import Path
 import logging as log
 from typing import Dict
+from scr.logic.errors import ModelError
 
 _EXTENSION = '.json'
 
@@ -60,6 +61,9 @@ def save(data: Dict, name: str, folder: str ='', home_path: str = Path.home()) -
 
 
 def load(name: str, folder: str ='', home_path: str =Path.home()):
+    """
+    :raise ModelError: if data can't be loaded.
+    """
     # Check home_path
     fp = Path(home_path, folder, name + _EXTENSION)
     log.debug(f"Loading file: {fp}")
@@ -69,17 +73,19 @@ def load(name: str, folder: str ='', home_path: str =Path.home()):
         data_loaded = json.load(fp)
         fp.close()
         log.info(f"File {fp} loaded successfully.")
+        return data_loaded
     else:
         fp_dir = Path(home_path, folder, name)
         if fp.exists():
-            log.error(f"{fp_dir} is an invalid path.")
+            msg = f"{fp_dir} is an invalid path."
+            log.error(msg)
         elif fp_dir.is_dir():
-            log.error(f"{fp_dir} is a folder, not a file!")
+            msg = f"{fp_dir} is a folder, not a file!"
+            log.error(msg)
         else:
-            log.error(f"{fp_dir} file doesn't exist.")
-        data_loaded = {}
-        log.warning("Empty data is loaded.")
-    return data_loaded
+            msg = f"{fp_dir} file doesn't exist."
+            log.error(msg)
+        raise ModelError(msg)
 
 
 def _user_decision(answer, default_answer='yes'):
